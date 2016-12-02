@@ -128,7 +128,8 @@ setup(
         'wishbone.input': [
             'cron =  wishbone.module.cron:Cron',
             'dictgenerator = wishbone.module.dictgenerator:DictGenerator',
-            'testevent = wishbone.module.testevent:TestEvent'
+            'inotify = wishbone.module.wb_inotify:Inotify',
+            'testevent = wishbone.module.testevent:TestEvent',
         ],
         'wishbone.output': [
             'null = wishbone.module.null:Null',

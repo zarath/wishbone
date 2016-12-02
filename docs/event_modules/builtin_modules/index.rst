@@ -17,6 +17,12 @@ wishbone.input.dictgenerator
 
 --------
 
+wishbone.input.inotify
+-------------------
+.. autoclass:: wishbone.module.wb_inotify.Inotify
+
+--------
+
 wishbone.input.testevent
 ------------------------
 .. autoclass:: wishbone.module.testevent.TestEvent
