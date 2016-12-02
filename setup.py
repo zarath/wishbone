@@ -36,6 +36,7 @@ install_requires = [
     'cronex==0.1.0',
     'gevent==1.1.2',
     'gipc==0.6.0',
+    'inotify==0.2.8',
     'jsonschema==2.5.1',
     'prettytable==0.7.2',
     'python-daemon-3K',
