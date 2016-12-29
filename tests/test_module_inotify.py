@@ -48,8 +48,8 @@ def test_module_inotify_default():
     sleep(1)
     os.unlink(filename)
     e = getter(inotify.pool.queue.outbox)
-    assert  e.get() == "IN_ATTRIB"
-    assert e.get('@tmp.inotify.path') == filename
-    assert getter(inotify.pool.queue.outbox).get() == "IN_DELETE_SELF"
+    assert  e.get() == filename
+    assert e.get('@tmp.inotify.inotify_type') == "IN_ATTRIB"
+    assert getter(inotify.pool.queue.outbox).get('@tmp.inotify.inotify_type') == "IN_DELETE_SELF"
 
 

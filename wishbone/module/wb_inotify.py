@@ -145,9 +145,9 @@ class Inotify(Actor):
                         for event in i.event_gen():
                             for inotify_type in event[1]:
                                 if inotify_type in inotify_types or inotify_types == []:
-                                    e = Event(inotify_type)
                                     abs_path = "%s/%s" % (event[2], event[3])
-                                    e.set(abs_path.rstrip('/'), key="@tmp.%s.path" % (self.name))
+                                    e = Event(abs_path.rstrip('/'))
+                                    e.set(inotify_type, key="@tmp.%s.inotify_type" % (self.name))
                                     self.pool.queue.outbox.put(e)
                             if inotify_type == "IN_DELETE_SELF":
                                 file_exists = False
