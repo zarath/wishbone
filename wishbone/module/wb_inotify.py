@@ -26,11 +26,13 @@ from wishbone import Actor
 from gevent import monkey; monkey.patch_all()
 from inotify.adapters import Inotify as InotifyLib
 from inotify.adapters import _LOGGER
+from inotify import constants
 from wishbone.event import Event
 import select
 import inotify.adapters
 from gevent import sleep
 import os
+
 
 class GeventInotify(InotifyLib):
 
@@ -129,6 +131,11 @@ class Inotify(Actor):
 
     def preHook(self):
 
+        for path, event_types in self.kwargs.paths.items():
+            for event_type in event_types:
+                if event_type not in constants.__dict__:
+                    raise Exception("Inotify event type '%s' defined for path '%s' is not valid." % (event_type, path))
+
         for path, inotify_types in self.kwargs.paths.items():
             self.sendToBackground(self.monitor, path, inotify_types)
 
@@ -137,7 +144,10 @@ class Inotify(Actor):
         while self.loop():
             if os.path.exists(path) and os.access(path, os.R_OK):
                 file_exists = True
-                self.logging.info("Started to monitor path '%s' for '%s' events." % (path, ','.join(inotify_types)))
+                all_types = ','.join(inotify_types)
+                if all_types == '':
+                    all_types = "ALL"
+                self.logging.info("Started to monitor path '%s' for '%s' inotify events." % (path, all_types))
                 try:
                     i = GeventInotify(block_duration_s=1000)
                     i.add_watch(path)
