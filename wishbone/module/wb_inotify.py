@@ -111,6 +111,12 @@ class Inotify(Actor):
 
     Parameters:
 
+        - initial_listing(bool)(True)
+
+           |  When True, generates for each defined path an event.  This is
+           |  useful to initially give depending modules the filenames they
+           |  need to function.
+
         - paths(dict)({"/tmp": ["IN_CREATE"]})
 
            |  A dict of paths with a list of inotify events to monitor.  When
@@ -125,7 +131,7 @@ class Inotify(Actor):
 
     '''
 
-    def __init__(self, actor_config, paths={"/tmp": ["IN_CREATE"]}):
+    def __init__(self, actor_config, initial_listing=True, paths={"/tmp": ["IN_CREATE"]}):
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")
 
@@ -144,6 +150,19 @@ class Inotify(Actor):
         while self.loop():
             if os.path.exists(path) and os.access(path, os.R_OK):
                 file_exists = True
+                if self.kwargs.initial_listing:
+                    if os.path.isdir(path):
+                        all_files = [name for name in os.listdir(path) if os.path.isfile("%s/%s" % (path, name))]
+                    else:
+                        all_files = [path]
+
+                    for f in all_files:
+
+                        self.pool.queue.outbox.put(
+                            Event(
+                                f
+                            )
+                        )
                 all_types = ','.join(inotify_types)
                 if all_types == '':
                     all_types = "ALL"
