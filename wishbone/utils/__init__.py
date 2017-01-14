@@ -25,6 +25,7 @@
 import os
 from gevent import sleep
 from wishbone.error import ModuleNotReady
+from structured_data_file import StructuredDataFile
 
 
 class ModuleConnectionMock(object):
@@ -35,7 +36,6 @@ class ModuleConnectionMock(object):
     to the upstream server has not been finished yet, we have at least a
     predictable error.
     '''
-
 
     def __init__(self, message="Not connected"):
 

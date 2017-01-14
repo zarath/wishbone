@@ -40,10 +40,11 @@ install_requires = [
     'jsonschema==2.5.1',
     'prettytable==0.7.2',
     'python-daemon-3K',
-    'PyYAML==3.11',
     'requests',
     'setproctitle==1.1.10',
     'uplook==1.1.0',
+    'pyyaml',
+    'jsonschema'
 ]
 
 dependency_links = [
@@ -129,7 +130,7 @@ setup(
         'wishbone.input': [
             'cron =  wishbone.module.cron:Cron',
             'dictgenerator = wishbone.module.dictgenerator:DictGenerator',
-            'inotify = wishbone.module.wb_inotify:Inotify',
+            'inotify = wishbone.module.wb_inotify:WBInotify',
             'testevent = wishbone.module.testevent:TestEvent',
         ],
         'wishbone.output': [
