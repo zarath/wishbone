@@ -88,3 +88,6 @@ class InvalidModule(Exception):
 
 class ModuleNotReady(Exception):
     pass
+
+class InvalidConfig(Exception):
+    pass
