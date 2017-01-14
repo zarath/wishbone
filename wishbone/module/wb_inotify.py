@@ -23,59 +23,29 @@
 #
 
 from wishbone import Actor
+
+# I know no other working way to actually monkey patch select
+# when inotify is imported.
+# If you know another way, please consider submitting a
+# patch or merge request
+# todo(smetj): Fix dirty monkey patch of inotify select
+import sys
 from gevent import monkey; monkey.patch_all()
-from inotify.adapters import Inotify as InotifyLib
+from gevent import select
+sys.modules["select"] = sys.modules["gevent.select"]
+sys.modules["select"].epoll = sys.modules["select"].poll
+
+from inotify.adapters import Inotify
 from inotify.adapters import _LOGGER
 from inotify import constants
+
 from wishbone.event import Event
-import select
-import inotify.adapters
 from gevent import sleep
 import os
+import fnmatch
 
 
-class GeventInotify(InotifyLib):
-
-    def __init__(self, paths=[], block_duration_s=10000):
-        super(GeventInotify, self).__init__()
-        self.__block_duration = block_duration_s
-        self.__watches = {}
-        self.__watches_r = {}
-        self.__buffer = b''
-
-        self.__inotify_fd = inotify.calls.inotify_init()
-        _LOGGER.debug("Inotify handle is (%d).", self.__inotify_fd)
-
-        # self.__epoll = select.epoll()
-        self.__epoll = select.poll()
-        self.__epoll.register(self.__inotify_fd, select.POLLIN)
-
-        for path in paths:
-            self.add_watch(path)
-
-    def event_gen(self):
-        while True:
-            # block_duration_s = self.__get_block_duration
-
-            # Poll, but manage signal-related errors.
-
-            try:
-                events = self._Inotify__epoll.poll()
-            except IOError as e:
-                if e.errno != EINTR:
-                    raise
-                continue
-
-            # Process events.
-
-            for fd, event_type in events:
-                # (fd) looks to always match the inotify FD.
-
-                for (header, type_names, path, filename) \
-                        in self._Inotify__handle_inotify_event(fd, event_type):
-                    yield (header, type_names, path, filename)
-
-class Inotify(Actor):
+class WBInotify(Actor):
 
     '''**Monitors one or more paths for inotify events.**
 
@@ -117,6 +87,10 @@ class Inotify(Actor):
            |  useful to initially give depending modules the filenames they
            |  need to function.
 
+        - glob_pattern(str)(*)
+
+           |
+
         - paths(dict)({"/tmp": ["IN_CREATE"]})
 
            |  A dict of paths with a list of inotify events to monitor.  When
@@ -131,7 +105,7 @@ class Inotify(Actor):
 
     '''
 
-    def __init__(self, actor_config, initial_listing=True, paths={"/tmp": ["IN_CREATE"]}):
+    def __init__(self, actor_config, initial_listing=True, glob_pattern="*", paths={"/tmp": ["IN_CREATE"]}):
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")
 
@@ -152,34 +126,40 @@ class Inotify(Actor):
                 file_exists = True
                 if self.kwargs.initial_listing:
                     if os.path.isdir(path):
-                        all_files = [name for name in os.listdir(path) if os.path.isfile("%s/%s" % (path, name))]
+                        all_files = [os.path.abspath("%s/%s" % (path, name)) for name in os.listdir(path) if os.path.isfile("%s/%s" % (path, name))]
                     else:
-                        all_files = [path]
+                        all_files = [os.path.abspath(path)]
 
                     for f in all_files:
-
-                        self.pool.queue.outbox.put(
-                            Event(
-                                f
+                        if fnmatch.fnmatch(f, self.kwargs.glob_pattern):
+                            self.pool.queue.outbox.put(
+                                Event(
+                                    {"path": f, "inotify_type": "WISHBONE_INIT"}
+                                )
                             )
-                        )
-                all_types = ','.join(inotify_types)
+                all_types = ', '.join(inotify_types)
                 if all_types == '':
                     all_types = "ALL"
-                self.logging.info("Started to monitor path '%s' for '%s' inotify events." % (path, all_types))
+                self.logging.info("Started to monitor path '%s' for '%s' inotify events." % (os.path.abspath(path), all_types))
                 try:
-                    i = GeventInotify(block_duration_s=1000)
+                    i = Inotify(block_duration_s=1000)
                     i.add_watch(path)
                     while file_exists and self.loop():
                         for event in i.event_gen():
-                            for inotify_type in event[1]:
-                                if inotify_type in inotify_types or inotify_types == []:
-                                    abs_path = "%s/%s" % (event[2], event[3])
-                                    e = Event(abs_path.rstrip('/'))
-                                    e.set(inotify_type, key="@tmp.%s.inotify_type" % (self.name))
-                                    self.pool.queue.outbox.put(e)
-                            if inotify_type == "IN_DELETE_SELF":
-                                file_exists = False
+                            if event is not None:
+                                for inotify_type in event[1]:
+                                    if inotify_type in inotify_types or inotify_types == []:
+                                        abs_path = "%s/%s" % (event[2], event[3])
+                                        if fnmatch.fnmatch(abs_path, self.kwargs.glob_pattern):
+                                            e = Event(
+                                                    {"path": abs_path.rstrip('/'), "inotify_type": inotify_type}
+                                                )
+                                            self.pool.queue.outbox.put(e)
+                                    if inotify_type == "IN_DELETE_SELF":
+                                        file_exists = False
+                                        break
+                            else:
+                                sleep(1)
                                 break
                 except Exception as err:
                     self.logging.critical('Failed to initialize inotify monitor. This needs immediate attention. Reason: %s' % err)

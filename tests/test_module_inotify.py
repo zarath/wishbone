@@ -23,7 +23,7 @@
 #
 
 from wishbone.event import Event
-from wishbone.module.wb_inotify import Inotify
+from wishbone.module.wb_inotify import WBInotify
 from wishbone.actor import ActorConfig
 from wishbone.utils.test import getter
 from uplook import UpLook
@@ -35,21 +35,20 @@ from gevent import sleep
 
 def test_module_inotify_default():
 
-    # Standard situation.  Monitors the chagnes to a file.
+    # Standard situation.  Monitors the changes to a file.
 
     actor_config = ActorConfig('inotify', 100, 1, {}, "")
 
     filename = "/tmp/%s" % str(uuid4())
     open(filename, 'a').close()
 
-    inotify = Inotify(actor_config, paths={filename:[]})
+    inotify = WBInotify(actor_config, initial_listing=True, paths={filename: []})
     inotify.pool.queue.outbox.disableFallThrough()
     inotify.start()
     sleep(1)
     os.unlink(filename)
+    sleep(1)
     e = getter(inotify.pool.queue.outbox)
-    assert  e.get() == filename
-    assert e.get('@tmp.inotify.inotify_type') == "IN_ATTRIB"
-    assert getter(inotify.pool.queue.outbox).get('@tmp.inotify.inotify_type') == "IN_DELETE_SELF"
-
-
+    assert e.get() == { "path": filename, "inotify_type": "WISHBONE_INIT" }
+    assert getter(inotify.pool.queue.outbox).get()["inotify_type"] == "IN_ATTRIB"
+    assert getter(inotify.pool.queue.outbox).get()["inotify_type"] == "IN_DELETE_SELF"
