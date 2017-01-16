@@ -89,7 +89,7 @@ class WBInotify(Actor):
 
         - glob_pattern(str)(*)
 
-           |
+           |  A glob pattern to filter out only matching files.
 
         - paths(dict)({"/tmp": ["IN_CREATE"]})
 
@@ -117,53 +117,95 @@ class WBInotify(Actor):
                     raise Exception("Inotify event type '%s' defined for path '%s' is not valid." % (event_type, path))
 
         for path, inotify_types in self.kwargs.paths.items():
-            self.sendToBackground(self.monitor, path, inotify_types)
+            self.sendToBackground(self.monitor, path, inotify_types, self.kwargs.glob_pattern)
 
-    def monitor(self, path, inotify_types):
+    def monitor(self, path, inotify_types, glob_pattern):
+
+        '''Monitors ``path`` for ``inotify_types`` on files and dirs matching ``glob_pattern``
+
+        :param str path: The path to monitor
+        :param list inotify_types: A list of inotify types to monitor
+        :param str glob_pattern: Paths need to match in order to be returned.
+        :return: None
+        '''
+
+        all_types = ', '.join(inotify_types)
+        if all_types == '':
+            all_types = "ALL"
 
         while self.loop():
             if os.path.exists(path) and os.access(path, os.R_OK):
-                file_exists = True
-                if self.kwargs.initial_listing:
-                    if os.path.isdir(path):
-                        all_files = [os.path.abspath("%s/%s" % (path, name)) for name in os.listdir(path) if os.path.isfile("%s/%s" % (path, name))]
-                    else:
-                        all_files = [os.path.abspath(path)]
+                self.logging.info("Started to monitor path '%s' for '%s' inotify events on paths matching '%s'." % (os.path.abspath(path), all_types, glob_pattern))
 
-                    for f in all_files:
-                        if fnmatch.fnmatch(f, self.kwargs.glob_pattern):
-                            self.pool.queue.outbox.put(
-                                Event(
-                                    {"path": f, "inotify_type": "WISHBONE_INIT"}
-                                )
-                            )
-                all_types = ', '.join(inotify_types)
-                if all_types == '':
-                    all_types = "ALL"
-                self.logging.info("Started to monitor path '%s' for '%s' inotify events." % (os.path.abspath(path), all_types))
+                if self.kwargs.initial_listing:
+                    for p in self.__getAllFiles(path, glob_pattern):
+                        e = Event({"path": p, "inotify_type": "WISHBONE_INIT"})
+                        self.pool.queue.outbox.put(e)
+
                 try:
-                    i = Inotify(block_duration_s=1000)
-                    i.add_watch(path)
-                    while file_exists and self.loop():
-                        for event in i.event_gen():
-                            if event is not None:
-                                for inotify_type in event[1]:
-                                    if inotify_type in inotify_types or inotify_types == []:
-                                        abs_path = "%s/%s" % (event[2], event[3])
-                                        if fnmatch.fnmatch(abs_path, self.kwargs.glob_pattern):
-                                            e = Event(
-                                                    {"path": abs_path.rstrip('/'), "inotify_type": inotify_type}
-                                                )
-                                            self.pool.queue.outbox.put(e)
-                                    if inotify_type == "IN_DELETE_SELF":
-                                        file_exists = False
-                                        break
-                            else:
-                                sleep(1)
-                                break
+                    for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
+                        self.pool.queue.outbox.put(Event({"path": abs_path, "inotify_type": i_type}))
                 except Exception as err:
                     self.logging.critical('Failed to initialize inotify monitor. This needs immediate attention. Reason: %s' % err)
                     sleep(1)
             else:
                 self.logging.warning("The defined path '%s' does not exist or is not readable. Will sleep for 5 seconds and try again." % (path))
                 sleep(5)
+
+
+    def __getAllFiles(self, path, glob_pattern):
+
+        """
+        Returns all files it can find in ``path``.  If ``path`` is a directory
+        it returns all files found in the directory (not recursive)
+
+        :param str path: The path to investigate.
+        :param str glob_pattern: The patterns to which files and dirs have to match.
+        :return: Generator
+        """
+
+        if os.path.isdir(path):
+            all_files = [os.path.abspath("%s/%s" % (path, name)) for name in os.listdir(path) if os.path.isfile("%s/%s" % (path, name))]
+        else:
+            all_files = [os.path.abspath(path)]
+
+        for f in all_files:
+            if fnmatch.fnmatch(f, glob_pattern):
+                yield f
+
+    def __setupInotifyMonitor(self, path, inotify_types, glob_pattern):
+
+        '''
+
+        Initializes an inotify monitor process on ``path`` and yields the
+        defined ``inotify_types`` generated on the paths matching the
+        ``glob_pattern``.
+
+        :param str path: The path to monitor
+        :param list inotify_types: A list of inotify types to monitor
+        :param str glob_pattern: Paths need to match in order to be returned.
+        :return: generator
+
+        '''
+
+        file_exists = True
+        i = Inotify(block_duration_s=1000)
+        i.add_watch(path)
+
+        while file_exists and self.loop():
+            for event in i.event_gen():
+                if event is not None:
+                    for inotify_type in event[1]:
+                        if inotify_type in inotify_types or inotify_types == []:
+                            abs_path = "%s/%s" % (event[2], event[3])
+                            if fnmatch.fnmatch(abs_path, glob_pattern):
+                                yield abs_path.rstrip('/'), inotify_type
+                        if inotify_type == "IN_DELETE_SELF":
+                            file_exists = False
+                            break
+                else:
+                    sleep(1)
+                    break
+
+
+
