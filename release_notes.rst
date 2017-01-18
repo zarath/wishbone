@@ -1,6 +1,17 @@
 Wishbone changelog
 ==================
 
+Versoin 2.3.2
+~~~~~~~~~~~~~
+Features:
+- Added wishbone.input.inotify to generate file activity events.
+- Added wishbone.utils.StructuredDataFile, a convenience class to load and
+  read structured data files.
+
+Bugfixes:
+
+
+
 Version 2.3.1
 ~~~~~~~~~~~~~
 
