@@ -139,9 +139,8 @@ class WBInotify(Actor):
 
                 if self.kwargs.initial_listing:
                     for p in self.__getAllFiles(path, glob_pattern):
-                        e = Event({"path": p, "inotify_type": "WISHBONE_INIT"})
+                        e = Event({"path": os.path.abspath(p), "inotify_type": "WISHBONE_INIT"})
                         self.pool.queue.outbox.put(e)
-
                 try:
                     for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
                         self.pool.queue.outbox.put(Event({"path": abs_path, "inotify_type": i_type}))
@@ -151,7 +150,6 @@ class WBInotify(Actor):
             else:
                 self.logging.warning("The defined path '%s' does not exist or is not readable. Will sleep for 5 seconds and try again." % (path))
                 sleep(5)
-
 
     def __getAllFiles(self, path, glob_pattern):
 
@@ -197,7 +195,7 @@ class WBInotify(Actor):
                 if event is not None:
                     for inotify_type in event[1]:
                         if inotify_type in inotify_types or inotify_types == []:
-                            abs_path = "%s/%s" % (event[2], event[3])
+                            abs_path = os.path.abspath("%s/%s" % (event[2], event[3]))
                             if fnmatch.fnmatch(abs_path, glob_pattern):
                                 yield abs_path.rstrip('/'), inotify_type
                         if inotify_type == "IN_DELETE_SELF":
@@ -205,7 +203,3 @@ class WBInotify(Actor):
                             break
                 else:
                     sleep(1)
-                    break
-
-
-
