@@ -59,12 +59,12 @@ class StructuredDataFile():
         self.expect_json = expect_json
         self.expect_yaml = expect_yaml
         self.content = {}
-        self._read_lock = Semaphore()
+        self.lock = Semaphore()
 
     def delete(self, path):
         '''Deletes the file content from the object'''
 
-        with self._read_lock:
+        with self.lock:
             try:
                 del(self.content[path])
             except Exception:
@@ -74,7 +74,7 @@ class StructuredDataFile():
 
         '''Dumps the complete content'''
 
-        with self._read_lock:
+        with self.lock:
             return self.content
 
     def get(self, path):
@@ -82,7 +82,7 @@ class StructuredDataFile():
         '''Returns the content of the file.  If the file isn't loaded yet, it
         tries to do that.'''
 
-        with self._read_lock:
+        with self.lock:
             if path not in self.content:
                 self.__load(path)
             return self.content[path]
@@ -91,8 +91,8 @@ class StructuredDataFile():
 
         '''Loads the file into the module and validates the content when required.'''
 
-        with self._read_lock:
-            return self.__load(path)
+        with self.lock:
+            return self.__load(os.path.abspath(path))
 
     def __load(self, path):
 
