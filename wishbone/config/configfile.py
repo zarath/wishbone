@@ -80,7 +80,8 @@ SCHEMA = {
 
 class ConfigFile(object):
 
-    def __init__(self, filename, logstyle):
+    def __init__(self, filename, logstyle, identification="wishbone"):
+        self.identification = identification
         self.logstyle = logstyle
         self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "routingtable": []})
         self.__addLogFunnel()
@@ -197,6 +198,6 @@ class ConfigFile(object):
     def _setupLoggingSYSLOG(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_syslog"] = AttrDict({'description': "Writes all incoming messags to syslog.", 'module': "wishbone.output.syslog", "arguments": {}, "context": "_logs"})
+            self.config["modules"]["_logs_syslog"] = AttrDict({'description': "Writes all incoming messags to syslog.", 'module': "wishbone.output.syslog", "arguments": {"ident": self.identification}, "context": "_logs"})
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")
 

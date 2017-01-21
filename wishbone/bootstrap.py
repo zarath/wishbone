@@ -57,7 +57,7 @@ class BootStrap():
         start.add_argument('--pid', type=str, dest='pid', default='%s/wishbone.pid' % (os.getcwd()), help='The pidfile to use.')
         start.add_argument('--queue_size', type=int, dest='queue_size', default=100, help='The queue size to use.')
         start.add_argument('--frequency', type=int, dest='frequency', default=1, help='The metric frequency.')
-        start.add_argument('--id', type=str, dest='identification', default=None, help='An identification string.')
+        start.add_argument('--syslog_id', type=str, dest='identification', default="wishbone", help='The application name in syslog.')
         start.add_argument('--module_path', type=str, dest='module_path', default=None, help='A comma separated list of directories to search and find Wishbone modules.')
 
         debug = subparsers.add_parser('debug', description="Starts a Wishbone instance in foreground and writes logs to STDOUT.")
@@ -127,9 +127,6 @@ class Dispatch():
         '''
 
         def startRouter():
-            if self.identification is not None:
-                setproctitle(self.identification)
-
             router = Default(
                 config,
                 size=self.queue_size,
@@ -250,7 +247,7 @@ class Dispatch():
         '''Maps to the CLI command and starts one or more Wishbone processes in background.
         '''
 
-        router_config = ConfigFile(self.config, 'SYSLOG').dump()
+        router_config = ConfigFile(self.config, 'SYSLOG', self.identification).dump()
         pid_file = PIDFile(self.pid)
 
         with DaemonContext(stdout=sys.stdout, stderr=sys.stderr, detach_process=True):
@@ -303,6 +300,7 @@ def main():
         BootStrap()
     except Exception as err:
         print(("Failed to bootstrap instance.  Reason: %s" % (err)))
+
 
 if __name__ == '__main__':
     main()

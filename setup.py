@@ -41,7 +41,6 @@ install_requires = [
     'prettytable==0.7.2',
     'python-daemon-3K',
     'requests',
-    'setproctitle==1.1.10',
     'uplook==1.1.0',
     'pyyaml',
     'jsonschema'
