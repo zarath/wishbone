@@ -41,6 +41,9 @@ class JSONEncode(Actor):
         - destination(str)("@data")
             | The location to write the JSON string to.
 
+        - sort(bool)(False)
+            | If True sorts the keys of the datastructure
+
 
     Queues:
 
@@ -51,7 +54,7 @@ class JSONEncode(Actor):
            |  Outgoing messges
     '''
 
-    def __init__(self, actor_config, source='@data', destination='@data'):
+    def __init__(self, actor_config, source='@data', destination='@data', sort=False):
 
         Actor.__init__(self, actor_config)
 
@@ -62,6 +65,6 @@ class JSONEncode(Actor):
     def consume(self, event):
 
         data = event.get(self.kwargs.source)
-        data = dumps(data)
+        data = dumps(data, sort_keys=self.kwargs.sort)
         event.set(data, self.kwargs.destination)
         self.submit(event, self.pool.queue.outbox)
