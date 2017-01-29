@@ -37,7 +37,6 @@ from gevent import signal
 from gevent.event import Event
 from daemon import DaemonContext
 from pkg_resources import get_distribution
-from setproctitle import setproctitle
 
 
 class BootStrap():
