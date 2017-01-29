@@ -80,8 +80,9 @@ SCHEMA = {
 
 class ConfigFile(object):
 
-    def __init__(self, filename, logstyle, identification="wishbone"):
+    def __init__(self, filename, logstyle, identification="wishbone", colorize=True):
         self.identification = identification
+        self.colorize = colorize
         self.logstyle = logstyle
         self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "routingtable": []})
         self.__addLogFunnel()
@@ -190,7 +191,7 @@ class ConfigFile(object):
     def _setupLoggingSTDOUT(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.encode.humanlogformat", "arguments": {}, "context": "_logs"})
+            self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.encode.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs"})
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
             self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.output.stdout", "arguments": {}, "context": "_logs"})
             self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")

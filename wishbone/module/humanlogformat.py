@@ -50,7 +50,11 @@ class HumanLogFormat(Actor):
 
     Parameters:
 
-        n/a
+        - colorize(bool)(True):
+           | When <True> colors the output according to the loglevel.
+
+        - indent(str)(<os.path.basename(sys.argv[0])>):
+           | When defined uses the value as program name.
 
     Queues:
 
@@ -63,6 +67,7 @@ class HumanLogFormat(Actor):
 
     def __init__(self, actor_config, colorize=True, ident=None):
         Actor.__init__(self, actor_config)
+
         self.levels = {
             0: "emergency",
             1: "alert",

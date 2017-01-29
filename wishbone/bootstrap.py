@@ -68,6 +68,7 @@ class BootStrap():
         debug.add_argument('--module_path', type=str, dest='module_path', default=None, help='A comma separated list of directories to search and find Wishbone modules.')
         debug.add_argument('--graph', action="store_true", help='When enabled starts a webserver on 8088 showing a graph of connected modules and queues.')
         debug.add_argument('--graph_include_sys', action="store_true", help='When enabled includes logs and metrics related queues modules and queues to graph layout.')
+        debug.add_argument('--nocolor', action="store_true", help='When defined does not print colored output to stdout.')
 
         debug.add_argument('--profile', action="store_true", help='When enabled profiles the process and dumps a profile file in the current directory. The profile file can be loaded in Chrome developer tools.')
 
@@ -106,6 +107,7 @@ class Dispatch():
         self.graph_include_sys = kwargs.get("graph_include_sys", None)
         self.profile = kwargs.get("profile", None)
         self.module = kwargs.get("module", None)
+        self.nocolor = kwargs.get("nocolor", False)
 
         self.routers = []
 
@@ -175,7 +177,8 @@ class Dispatch():
         '''Maps to the CLI command and starts Wishbone in foreground.
         '''
 
-        router_config = ConfigFile(self.config, 'STDOUT').dump()
+        colorize = not self.nocolor
+        router_config = ConfigFile(self.config, 'STDOUT', colorize= colorize).dump()
 
         if self.instances == 1:
             sys.stdout.write("\nInstance started in foreground with pid %s\n" % (os.getpid()))
