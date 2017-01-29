@@ -127,7 +127,11 @@ class Actor():
             destination_module.__parents[destination_queue] = "%s.%s" % (self.name, source)
 
         if not self.pool.hasQueue(source):
+            self.logging.debug("Module instance '%s' has no queue '%s' so auto created." % (self.name, source))
             self.pool.createQueue(source)
+
+        if not destination_module.pool.hasQueue(destination_queue):
+            self.logging.debug("Module instance '%s' has no queue '%s' so auto created." % (destination_module.name, destination_queue))
 
         setattr(destination_module.pool.queue, destination_queue, self.pool.getQueue(source))
         self.pool.getQueue(source).disableFallThrough()
