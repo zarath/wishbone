@@ -46,12 +46,6 @@ class Format():
     def do(self, data):
         return self.pid(self.counter(data))
 
-    # def __returnComplete(self, event):
-    #     return event.raw(complete=True)
-
-    # def __returnIncomplete(self, event):
-    #     return event.get('@data')
-
     def __returnCounter(self, data):
         self.countervalue += 1
         return "%s - %s" % (self.countervalue, data)
@@ -92,6 +86,10 @@ class STDOUT(Actor):
         - pid(bool)(False)
            |  Includes the pid of the process producing the output.
 
+        - colorize(bool)(False)
+           |  When True all STDOUT output is wrapped in between ANSI color
+           |  escape sequences.
+
         - foreground_color(str)("WHITE")
            |  The foreground color.
            |  Valid values: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
@@ -110,7 +108,7 @@ class STDOUT(Actor):
            |  Incoming events.
     '''
 
-    def __init__(self, actor_config, selection="@data", counter=False, prefix="", pid=False, foreground_color="WHITE", background_color="RESET", color_style="NORMAL"):
+    def __init__(self, actor_config, selection="@data", counter=False, prefix="", pid=False, colorize=False, foreground_color="WHITE", background_color="RESET", color_style="NORMAL"):
         Actor.__init__(self, actor_config)
 
         self.__validateInput(foreground_color, background_color, color_style)
@@ -118,22 +116,32 @@ class STDOUT(Actor):
         self.pool.createQueue("inbox")
         self.registerConsumer(self.consume, "inbox")
 
-        init(autoreset=True)
+    def preHook(self):
+
+        if self.kwargs.colorize:
+            init(autoreset=True)
+            self.getString = self.__stringColor
+        else:
+            self.getString = self.__stringNoColor
 
     def consume(self, event):
+
         if isinstance(event, Bulk):
             data = event.dumpFieldAsList(self.kwargs.selection)
             data = "\n".join(data)
         else:
             data = event.get(self.kwargs.selection)
 
-        output = "%s%s%s%s%s\n" % (
-            getattr(Fore, self.kwargs.foreground_color),
-            getattr(Back, self.kwargs.background_color),
-            getattr(Style, self.kwargs.color_style),
-            self.kwargs.prefix,
-            self.format.do(data)
-        )
+        try:
+            output = self.getString(
+                getattr(Fore, self.kwargs.foreground_color),
+                getattr(Back, self.kwargs.background_color),
+                getattr(Style, self.kwargs.color_style),
+                self.kwargs.prefix,
+                self.format.do(data)
+            )
+        except Exception as err:
+            print err
         sys.stdout.write(output)
         sys.stdout.flush()
 
@@ -145,3 +153,19 @@ class STDOUT(Actor):
             raise Exception("Background value is not correct.")
         if s not in ["DIM", "NORMAL", "BRIGHT"]:
             raise Exception("Style value is not correct.")
+
+    def __stringColor(self, f, b, s, p, d):
+        return "%s%s%s%s%s\n" % (
+            f,
+            b,
+            s,
+            p,
+            self.format.do(d)
+        )
+
+    def __stringNoColor(self, f, b, s, p, d):
+
+        return "%s%s\n" % (
+            p,
+            self.format.do(d)
+        )
