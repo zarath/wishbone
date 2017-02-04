@@ -193,7 +193,7 @@ class ConfigFile(object):
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.encode.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs"})
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
-            self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.output.stdout", "arguments": {}, "context": "_logs"})
+            self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs"})
             self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")
 
     def _setupLoggingSYSLOG(self):
