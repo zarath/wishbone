@@ -30,15 +30,15 @@ PROJECT = 'wishbone'
 VERSION = '2.3.2'
 
 install_requires = [
-    'arrow==0.7.0',
+    'arrow',
     'attrdict==2.0.0',
-    'colorama==0.3.7',
-    'cronex==0.1.0',
-    'gevent==1.1.2',
-    'gipc==0.6.0',
-    'inotify==0.2.8',
-    'jsonschema==2.5.1',
-    'prettytable==0.7.2',
+    'colorama',
+    'cronex',
+    'gevent',
+    'gipc',
+    'inotify',
+    'jsonschema',
+    'prettytable',
     'python-daemon-3K',
     'requests',
     'uplook==1.1.0',
