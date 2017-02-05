@@ -7,6 +7,9 @@ Features:
 - Added wishbone.input.inotify to generate file activity events.
 - Added wishbone.utils.StructuredDataFile, a convenience class to load and
   read structured data files.
+- Added --nocolorize switch to debug command.
+- Added nocolor support to wishbone.output.stdout
+- Added nocolor support to wishbone.encode.humanlogformat
 
 Bugfixes:
 
