@@ -32,6 +32,7 @@ import os
 if version_info[0] == 2:
     from io import open
 
+
 class DictGenerator(Actor):
 
     '''**Generates random dictionaries.**
@@ -132,7 +133,7 @@ class DictGenerator(Actor):
         while self.loop():
             word = choice(self.wordlist).rstrip()
             try:
-                return word.encode("ascii", "ignore")
+                return str(word.encode("ascii", "ignore"))
             except:
                 pass
 
