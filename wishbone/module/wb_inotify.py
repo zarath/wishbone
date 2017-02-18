@@ -43,6 +43,7 @@ from wishbone.event import Event
 from gevent import sleep
 import os
 import fnmatch
+import traceback
 
 
 class WBInotify(Actor):
@@ -188,7 +189,7 @@ class WBInotify(Actor):
 
         file_exists = True
         i = Inotify(block_duration_s=1000)
-        i.add_watch(path)
+        i.add_watch(bytes(path, 'UTF8'))
 
         while file_exists and self.loop():
             for event in i.event_gen():

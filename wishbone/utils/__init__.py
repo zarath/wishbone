@@ -25,7 +25,7 @@
 import os
 from gevent import sleep
 from wishbone.error import ModuleNotReady
-from structured_data_file import StructuredDataFile
+from .structured_data_file import StructuredDataFile
 
 
 class ModuleConnectionMock(object):

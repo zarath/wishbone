@@ -65,6 +65,6 @@ class JSONEncode(Actor):
     def consume(self, event):
 
         data = event.get(self.kwargs.source)
-        data = dumps(data, sort_keys=self.kwargs.sort)
+        data = dumps({str(k): v for k, v in data.items()}, sort_keys=self.kwargs.sort)
         event.set(data, self.kwargs.destination)
         self.submit(event, self.pool.queue.outbox)
