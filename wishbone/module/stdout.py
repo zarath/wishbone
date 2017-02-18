@@ -132,16 +132,13 @@ class STDOUT(Actor):
         else:
             data = event.get(self.kwargs.selection)
 
-        try:
-            output = self.getString(
-                getattr(Fore, self.kwargs.foreground_color),
-                getattr(Back, self.kwargs.background_color),
-                getattr(Style, self.kwargs.color_style),
-                self.kwargs.prefix,
-                self.format.do(data)
-            )
-        except Exception as err:
-            print err
+        output = self.getString(
+            getattr(Fore, self.kwargs.foreground_color),
+            getattr(Back, self.kwargs.background_color),
+            getattr(Style, self.kwargs.color_style),
+            self.kwargs.prefix,
+            self.format.do(data)
+        )
         sys.stdout.write(output)
         sys.stdout.flush()
 
