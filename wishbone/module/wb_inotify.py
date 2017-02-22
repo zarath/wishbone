@@ -196,7 +196,7 @@ class WBInotify(Actor):
                 if event is not None:
                     for inotify_type in event[1]:
                         if inotify_type in inotify_types or inotify_types == []:
-                            abs_path = os.path.abspath("%s/%s" % (event[2], event[3]))
+                            abs_path = os.path.abspath("%s/%s" % (event[2].decode("utf-8"), event[3].decode("utf-8")))
                             if fnmatch.fnmatch(abs_path, glob_pattern):
                                 yield abs_path.rstrip('/'), inotify_type
                         if inotify_type == "IN_DELETE_SELF":
