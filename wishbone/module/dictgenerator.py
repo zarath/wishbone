@@ -133,7 +133,7 @@ class DictGenerator(Actor):
         while self.loop():
             word = choice(self.wordlist).rstrip()
             try:
-                return str(word.encode("ascii", "ignore"))
+                return word
             except:
                 pass
 
