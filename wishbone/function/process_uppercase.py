@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  process_uppercase.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,9 +22,22 @@
 #
 #
 
-from .actor import Actor
-from .queue import Queue
-from .queue import QueuePool
-from .logging import Logging
-from .componentmanager import ComponentManager
-from .event import Event
+
+def processUppercaseWrapper(source='@data', destination='@data', *args, **kwargs):
+
+    '''
+    **Puts the desired field in uppercase.**
+
+    Puts the desired field in uppercase
+
+    Parameters:
+
+        n/a
+    '''
+
+    def processUppercase(event):
+        event.set(event.get(source).upper(), destination)
+        return event
+
+    return processUppercase
+

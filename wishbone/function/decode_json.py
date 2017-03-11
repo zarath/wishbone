@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  decode_json.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,9 +22,23 @@
 #
 #
 
-from .actor import Actor
-from .queue import Queue
-from .queue import QueuePool
-from .logging import Logging
-from .componentmanager import ComponentManager
-from .event import Event
+
+def decodeJSONWrapper(source='@data', destination='@data', *args, **kwargs):
+    '''
+    **Decode JSON**
+
+    Converts a JSON string into a Python dict.
+
+    Parameters:
+
+        n/a
+    '''
+
+    from json import loads
+
+    def decodeJSON(event):
+        event.set(loads(event.get(source)), destination)
+        return event
+
+    return decodeJSON
+

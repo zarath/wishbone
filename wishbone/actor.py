@@ -58,27 +58,26 @@ class ActorConfig(object):
         frequency (int): The time in seconds to generate metrics.
         lookup (dict): A dictionary of lookup methods.
         description (str): A short free form discription of the actor instance.
-
+        functions (dict): A dict of queue names containing an array of functions
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor."):
+    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}):
 
         '''
-
         Args:
             name (str): The name identifying the actor instance.
             size (int): The size of the Actor instance's queues.
             frequency (int): The time in seconds to generate metrics.
             lookup (dict): A dictionary of lookup methods.
             description (str): A short free form discription of the actor instance.
-
+            functions (dict): A dict of queue names containing an array of functions
         '''
         self.name = name
         self.size = size
         self.frequency = frequency
         self.lookup = lookup
         self.description = description
-
+        self.functions = functions
 
 class Actor():
 
@@ -164,6 +163,25 @@ class Actor():
 
         return self.__loop
 
+    def metricProducer(self):
+        '''A greenthread which collects the queue metrics at the defined interval.'''
+
+        self.__run.wait()
+        hostname = socket.gethostname()
+        while self.loop():
+            for queue in self.pool.listQueues(names=True):
+                for metric, value in list(self.pool.getQueue(queue).stats().items()):
+                    metric = Metric(time=time(),
+                                    type="wishbone",
+                                    source=hostname,
+                                    name="module.%s.queue.%s.%s" % (self.name, queue, metric),
+                                    value=value,
+                                    unit="",
+                                    tags=())
+                    event = Wishbone_Event(metric)
+                    self.submit(event, self.pool.queue.metrics)
+            sleep(self.frequency)
+
     def postHook(self):
 
         pass
@@ -187,7 +205,7 @@ class Actor():
         if hasattr(self, "preHook"):
             self.logging.debug("preHook() found, executing")
             self.preHook()
-
+        self.__validateAppliedFunctions()
         self.__run.set()
         self.logging.debug("Started with max queue size of %s events and metrics interval of %s seconds." % (self.size, self.frequency))
         self.stopped = False
@@ -254,14 +272,49 @@ class Actor():
             except QueueFull:
                 sleep(0.1)
 
+    def __applyFunctions(self, queue, event):
+
+        if queue in self.config.functions:
+            for f in self.config.functions[queue]:
+                try:
+                    event = f(event)
+                except Exception as err:
+                    self.logging.error("Function '%s' is skipped as it is causing an error. Reason: '%s'" % (f.__name__, err))
+        return event
+
+    def __buildUplook(self):
+
+        self.__current_event = {}
+        args = {}
+        for key, value in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
+            if key == "self" or isinstance(value, ActorConfig):
+                next
+            else:
+                args[key] = value
+
+        uplook = UpLook(**args)
+        for name in uplook.listFunctions():
+            if name not in self.config.lookup:
+                raise ModuleInitFailure("A lookup function '%s' was defined but no lookup function with that name registered." % (name))
+            else:
+                if isinstance(self.config.lookup[name], EventLookup):
+                    uplook.registerLookup(name, self.doEventLookup)
+                else:
+                    uplook.registerLookup(name, self.config.lookup[name])
+
+        self.uplook = uplook
+        self.kwargs = uplook.get()
+
     def __consumer(self, function, queue):
         '''Greenthread which applies <function> to each element from <queue>
         '''
 
         self.__run.wait()
+        self.logging.debug("Function '%s' has been registered to consume queue '%s'" % (function.__name__, queue))
 
         while self.loop():
             event = self.pool.queue.__dict__[queue].get()
+            event = self.__applyFunctions(queue, event)
             self.current_event = event
             try:
                 function(event)
@@ -279,44 +332,17 @@ class Actor():
             else:
                 self.submit(event, self.pool.queue.success)
 
-    def __buildUplook(self):
+    def __validateAppliedFunctions(self):
 
-        self.__current_event = {}
-        args = {}
-        for key, value in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
-            if key == "self" or isinstance(value, ActorConfig):
-                next
-            else:
-                args[key] = value
+        '''
+        A validation routine which checks whether functions have been applied
+        to queues without a registered consumer.  The effect of that would be
+        that the functions are never applied which is not what the user
+        wanted.
+        '''
 
-        uplook = UpLook(**args)
-        for name in uplook.listFunctions():
-            if name not in self.config.lookup:
-                raise ModuleInitFailure("A lookup function '%s' was defined but no lookup function with that name registered." % (name))
-            else:
-                if self.config.lookup[name].__self__.__class__ == EventLookup:
-                    uplook.registerLookup(name, self.doEventLookup)
-                else:
-                    uplook.registerLookup(name, self.config.lookup[name])
+        queues_w_registered_consumers = [t.args[1] for t in self.greenlets.consumer]
 
-        self.uplook = uplook
-        self.kwargs = uplook.get()
-
-    def metricProducer(self):
-        '''A greenthread which collects the queue metrics at the defined interval.'''
-
-        self.__run.wait()
-        hostname = socket.gethostname()
-        while self.loop():
-            for queue in self.pool.listQueues(names=True):
-                for metric, value in list(self.pool.getQueue(queue).stats().items()):
-                    metric = Metric(time=time(),
-                                    type="wishbone",
-                                    source=hostname,
-                                    name="module.%s.queue.%s.%s" % (self.name, queue, metric),
-                                    value=value,
-                                    unit="",
-                                    tags=())
-                    event = Wishbone_Event(metric)
-                    self.submit(event, self.pool.queue.metrics)
-            sleep(self.frequency)
+        for queue in self.config.functions.keys():
+            if queue not in queues_w_registered_consumers:
+                raise ModuleInitFailure("Failed to initialize module '%s'. You have functions defined on queue '%s' which doesn't have a registered consumer." % (self.name, queue))

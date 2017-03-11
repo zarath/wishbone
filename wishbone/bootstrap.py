@@ -30,7 +30,7 @@ import sys
 os.environ["TZ"] = ":/etc/localtime"
 
 from wishbone.router import Default
-from wishbone import ModuleManager
+from wishbone import ComponentManager
 from wishbone.config import ConfigFile
 from wishbone.utils import PIDFile
 from gevent import signal
@@ -80,8 +80,10 @@ class BootStrap():
 
         subparsers.add_parser('list', description="Lists the available Wishbone modules and lookup.")
 
-        show = subparsers.add_parser('show', description="Shows the details of a module.")
-        show.add_argument('--module', type=str, required=True, help='Shows the documentation of the module. ')
+        show = subparsers.add_parser('show', description="Shows information about a component.")
+        show_group = show.add_mutually_exclusive_group(required=True)
+        show_group.add_argument('--docs', type=str, help='Shows the documentation of the component.')
+        show_group.add_argument('--code', type=str, help='Shows the code of the refered component.')
 
         arguments = vars(parser.parse_args())
 
@@ -106,7 +108,8 @@ class Dispatch():
         self.graph = kwargs.get("graph", None)
         self.graph_include_sys = kwargs.get("graph_include_sys", None)
         self.profile = kwargs.get("profile", None)
-        self.module = kwargs.get("module", None)
+        self.docs = kwargs.get("docs", None)
+        self.code = kwargs.get("code", None)
         self.nocolor = kwargs.get("nocolor", False)
 
         self.routers = []
@@ -178,7 +181,7 @@ class Dispatch():
         '''
 
         colorize = not self.nocolor
-        router_config = ConfigFile(self.config, 'STDOUT', colorize= colorize).dump()
+        router_config = ConfigFile(self.config, 'STDOUT', colorize=colorize).dump()
 
         if self.instances == 1:
             sys.stdout.write("\nInstance started in foreground with pid %s\n" % (os.getpid()))
@@ -202,48 +205,53 @@ class Dispatch():
         '''Maps to the CLI command and lists all Wishbone entrypoint modules it can find.
         '''
 
-        categories = ["wishbone", "wishbone_contrib"]
-        groups = ["flow", "encode", "decode", "function", "input", "output"]
-
         print((self.generateHeader()))
-        print("Available event modules:")
-        print((ModuleManager(categories=categories, groups=groups).getModuleTable()))
-        print("\n")
-        print("Available lookup function modules:")
-        print((ModuleManager(categories=categories, groups=["lookup"]).getModuleTable()))
+        print("Available Wishbone components:")
+        print((ComponentManager().getComponentTable()))
 
     def show(self):
         '''Maps to the CLI command and shows the docstring of the Wishbone module.
         '''
 
-        module_manager = ModuleManager()
-        module_manager.validateModuleName(self.module)
-        module_manager.exists(self.module)
+        component_manager = ComponentManager()
 
-        print((self.generateHeader()))
+        if self.docs != None:
+            component_manager.validateComponentName(self.docs)
+            component_manager.exists(self.docs)
 
-        try:
-            (category, group, self.module) = self.module.split('.')
-        except ValueError:
-            (category, sub, group, self.module) = self.module.split('.')
-            category = "%s.%s" % (category, sub)
+            print((self.generateHeader()))
+            (namespace, component_type, category, name) = self.docs.split('.')
 
-        try:
-            title = module_manager.getModuleTitle(category, group, self.module)
-            version = module_manager.getModuleVersion(category, group, self.module)
-            header = "%s.%s.%s" % (category, group, self.module)
-            print("")
-            print(("="*len(header)))
-            print(header)
-            print(("="*len(header)))
-            print("")
-            print(("Version: %s" % (version)))
-            print("")
-            print(title)
-            print(("-"*len(title)))
-            print((module_manager.getModuleDoc(category, group, self.module)))
-        except Exception as err:
-            print(("Failed to load module %s.%s.%s. Reason: %s" % (category, group, self.module, err)))
+            try:
+                title = component_manager.getComponentTitle(namespace, component_type, category, name)
+                version = component_manager.getComponentVersion(namespace, component_type, category, name)
+                header = "%s.%s.%s.%s" % (namespace, component_type, category, name)
+                print("")
+                print(("="*len(header)))
+                print(header)
+                print(("="*len(header)))
+                print("")
+                print(("Version: %s" % (version)))
+                print("")
+                print(title)
+                print(("-"*len(title)))
+                print((component_manager.getComponentDoc(namespace, component_type, category, name)))
+            except Exception as err:
+                print("Failed to load component '%s'. Reason: %s" % (self.docs, err))
+
+        if self.code != None:
+
+            component_manager.validateComponentName(self.code)
+            component_manager.exists(self.code)
+
+            import inspect
+            from pygments import highlight
+            from pygments.lexers import get_lexer_by_name
+            from pygments.formatters import terminal
+
+            component = component_manager.getComponentByName(self.code)
+            code = "".join(inspect.getsourcelines(component)[0])
+            print(highlight(code, get_lexer_by_name("python"), terminal.TerminalFormatter()))
 
     def start(self):
         '''Maps to the CLI command and starts one or more Wishbone processes in background.

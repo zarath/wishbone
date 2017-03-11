@@ -23,14 +23,13 @@
 #
 
 from wishbone.actor import ActorConfig
-from wishbone.error import ModuleInitFailure, NoSuchModule, FunctionInitFailure
-from wishbone import ModuleManager
+from wishbone.error import ModuleInitFailure, NoSuchModule
+from wishbone import ComponentManager
 from gevent import event, sleep, spawn
 from gevent import pywsgi
 import json
 from .graphcontent import GRAPHCONTENT
 from .graphcontent import VisJSData
-from pkg_resources import iter_entry_points
 
 
 class Container():
@@ -74,7 +73,7 @@ class Default(object):
 
     def __init__(self, config=None, size=100, frequency=1, identification="wishbone", graph=False, graph_include_sys=False):
 
-        self.module_manager = ModuleManager()
+        self.component_manager = ComponentManager()
         self.config = config
         self.size = size
         self.frequency = frequency
@@ -180,18 +179,37 @@ class Default(object):
     def __initConfig(self):
         '''Setup all modules and routes.'''
 
-        lookup_modules = {}
-
+        lookups = {}
         for name, instance in list(self.config.lookups.items()):
-            lookup_modules[name] = self.__registerLookupModule(instance.module, **instance.arguments)
+            lookups[name] = self.component_manager.getComponentByName(instance.lookup)(**instance.arguments).lookup
+
+        functions = {}
+        for name, instance in list(self.config.functions.items()):
+            self.component_manager.getComponentByName(instance.function)
+            functions[name] = self.component_manager.getComponentByName(instance.function)(**instance.arguments)
 
         for name, instance in list(self.config.modules.items()):
-            pmodule = self.module_manager.getModuleByName(instance.module)
+            # Cherrypick the defined functions
+            module_functions = {}
+            for queue, queue_functions in list(instance.functions.items()):
+                module_functions[queue] = []
+                for queue_function in queue_functions:
+                    if queue_function in functions:
+                        module_functions[queue].append(functions[queue_function])
+
+            pmodule = self.component_manager.getComponentByName(instance.module)
 
             if instance.description == "":
                 instance.description = pmodule.__doc__.split("\n")[0].replace('*', '')
 
-            actor_config = ActorConfig(name, self.size, self.frequency, lookup_modules, instance.description)
+            actor_config = ActorConfig(
+                name=name,
+                size=self.size,
+                frequency=self.frequency,
+                lookup=lookups,
+                description=instance.description,
+                functions=module_functions
+            )
 
             self.registerModule(pmodule, actor_config, instance.arguments)
 
@@ -206,27 +224,27 @@ class Default(object):
         else:
             return True
 
-    def __registerLookupModule(self, module, **kwargs):
-        '''Registers a lookupmodule
+    # def __registerLookupModule(self, module, **kwargs):
+    #     '''Registers a lookupmodule
 
-        Args:
-            module (Looup): The lookup module (not initialized)
-            **kwargs (dict): The parameters used to initiolize the lookup module.
+    #     Args:
+    #         module (Looup): The lookup module (not initialized)
+    #         **kwargs (dict): The parameters used to initiolize the lookup module.
 
-        Raises:
-            FunctionInitFailure: An error occurred loading and initializing the module.
+    #     Raises:
+    #         FunctionInitFailure: An error occurred loading and initializing the module.
 
-        '''
+    #     '''
 
-        for group in ["wishbone.lookup", "wishbone_contrib.lookup"]:
-            for entry_point in iter_entry_points(group=group, name=None):
-                if "%s.%s" % (group, entry_point.name) == module:
-                    l = entry_point.load()(**kwargs)
-                    if hasattr(l, "lookup"):
-                        return l.lookup
-                    else:
-                        raise FunctionInitFailure("Lookup module '%s' does not seem to have a 'lookup' method" % (l.module_name))
-        raise FunctionInitFailure("Lookup module '%s' does not exist." % (module))
+    #     for group in ["wishbone.lookup", "wishbone_contrib.lookup"]:
+    #         for entry_point in iter_entry_points(group=group, name=None):
+    #             if "%s.%s" % (group, entry_point.name) == module:
+    #                 l = entry_point.load()(**kwargs)
+    #                 if hasattr(l, "lookup"):
+    #                     return l.lookup
+    #                 else:
+    #                     raise FunctionInitFailure("Lookup module '%s' does not seem to have a 'lookup' method" % (l.module_name))
+    #     raise FunctionInitFailure("Lookup module '%s' does not exist." % (module))
 
     def __setupConnections(self):
         '''Setup all connections as defined by configuration_manager'''
