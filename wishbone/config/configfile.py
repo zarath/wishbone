@@ -23,27 +23,44 @@
 #
 
 import yaml
-#from wishbone.external.attrdict import AttrDict
 from attrdict import AttrDict
 from jsonschema import validate
 
 SCHEMA = {
     "type": "object",
     "properties": {
-        "lookups": {
+        "functions": {
             "type": "object",
             "patternProperties": {
                 ".*": {
                     "type": "object",
                     "properties": {
-                        "module": {
+                        "function": {
                             "type": "string"
                         },
                         "arguments": {
                             "type": "object"
                         }
                     },
-                    "required": ["module"],
+                    "required": ["function"],
+                    "additionalProperties": False
+                }
+            }
+        },
+        "lookups": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "type": "object",
+                    "properties": {
+                        "lookup": {
+                            "type": "string"
+                        },
+                        "arguments": {
+                            "type": "object"
+                        }
+                    },
+                    "required": ["lookup"],
                     "additionalProperties": False
                 }
             }
@@ -61,6 +78,9 @@ SCHEMA = {
                             "type": "string"
                         },
                         "arguments": {
+                            "type": "object"
+                        },
+                        "functions": {
                             "type": "object"
                         }
                     },
@@ -84,30 +104,37 @@ class ConfigFile(object):
         self.identification = identification
         self.colorize = colorize
         self.logstyle = logstyle
-        self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "routingtable": []})
+        self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "functions": AttrDict({}), "routingtable": []})
         self.__addLogFunnel()
         self.__addMetricFunnel()
         self.load(filename)
 
-    def addModule(self, name, module, arguments={}, description="", context="configfile"):
+    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}):
 
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
 
         if name not in self.config["modules"]:
-            self.config["modules"][name] = AttrDict({'description': description, 'module': module, 'arguments': arguments, 'context': context})
+            self.config["modules"][name] = AttrDict({'description': description, 'module': module, 'arguments': arguments, 'context': context, 'functions': functions})
             self.addConnection(name, "logs", "_logs", name, context="_logs")
             self.addConnection(name, "metrics", "_metrics", name, context="_metrics")
 
         else:
             raise Exception("Module instance name '%s' is already taken." % (name))
 
-    def addLookup(self, name, module, arguments={}):
+    def addLookup(self, name, lookup, arguments={}):
 
         if name not in self.config["lookups"]:
-            self.config["lookups"][name] = AttrDict({"module": module, "arguments": arguments})
+            self.config["lookups"][name] = AttrDict({"lookup": lookup, "arguments": arguments})
         else:
-            raise Exception("Uplook instance name '%s' is already taken." % (name))
+            raise Exception("Lookup instance name '%s' is already taken." % (name))
+
+    def addFunction(self, name, function, arguments={}):
+
+        if name not in self.config["functions"]:
+            self.config["functions"][name] = AttrDict({"function": function, "arguments": arguments})
+        else:
+            raise Exception("Function instance name '%s' is already taken." % (name))
 
     def addConnection(self, source_module, source_queue, destination_module, destination_queue, context="configfile"):
 
@@ -131,6 +158,10 @@ class ConfigFile(object):
         if "lookups" in config:
             for lookup in config["lookups"]:
                 self.addLookup(name=lookup, **config["lookups"][lookup])
+
+        if "functions" in config:
+            for function in config["functions"]:
+                self.addFunction(name=function, **config["functions"][function])
 
         for module in config["modules"]:
             self.addModule(name=module, **config["modules"][module])
@@ -182,23 +213,24 @@ class ConfigFile(object):
 
     def __addLogFunnel(self):
 
-        self.config["modules"]["_logs"] = AttrDict({'description': "Centralizes the logs of all modules.", 'module': "wishbone.flow.funnel", "arguments": {}, "context": "_logs"})
+        self.config["modules"]["_logs"] = AttrDict({'description': "Centralizes the logs of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_logs", "functions": {}})
 
     def __addMetricFunnel(self):
 
-        self.config["modules"]["_metrics"] = AttrDict({'description': "Centralizes the metrics of all modules.", 'module': "wishbone.flow.funnel", "arguments": {}, "context": "_metrics"})
+        self.config["modules"]["_metrics"] = AttrDict({'description': "Centralizes the metrics of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_metrics", "functions": {}})
 
     def _setupLoggingSTDOUT(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.encode.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs"})
+            self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.module.process.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
-            self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs"})
+
+            self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.module.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
             self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")
 
     def _setupLoggingSYSLOG(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_syslog"] = AttrDict({'description': "Writes all incoming messags to syslog.", 'module': "wishbone.output.syslog", "arguments": {"ident": self.identification}, "context": "_logs"})
+            self.config["modules"]["_logs_syslog"] = AttrDict({'description': "Writes all incoming messags to syslog.", 'module': "wishbone.module.output.syslog", "arguments": {"ident": self.identification}, "context": "_logs", "functions": {}})
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")
 

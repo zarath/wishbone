@@ -27,7 +27,7 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 PROJECT = 'wishbone'
-VERSION = '2.3.2'
+VERSION = '2.4.0'
 
 install_requires = [
     'arrow',
@@ -105,7 +105,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': ['wishbone = wishbone.bootstrap:main'],
-        'wishbone.flow': [
+        'wishbone.module.flow': [
             'acknowledge = wishbone.module.acknowledge:Acknowledge',
             'deserialize = wishbone.module.deserialize:Deserialize',
             'fanout = wishbone.module.fanout:Fanout',
@@ -116,37 +116,43 @@ setup(
             'tippingbucket = wishbone.module.tippingbucket:TippingBucket',
             'ttl = wishbone.module.ttl:TTL'
         ],
-        'wishbone.encode': [
-            'humanlogformat = wishbone.module.humanlogformat:HumanLogFormat',
-            'json = wishbone.module.jsonencode:JSONEncode'
+        'wishbone.module.process': [
+            'modify = wishbone.module.modify:Modify',
+            'humanlogformat = wishbone.module.humanlogformat:HumanLogFormat'
         ],
-        'wishbone.decode': [
-            'json = wishbone.module.jsondecode:JSONDecode'
-        ],
-        'wishbone.function': [
-            'modify = wishbone.module.modify:Modify'
-        ],
-        'wishbone.input': [
+        'wishbone.module.input': [
             'cron =  wishbone.module.cron:Cron',
             'dictgenerator = wishbone.module.dictgenerator:DictGenerator',
             'inotify = wishbone.module.wb_inotify:WBInotify',
             'testevent = wishbone.module.testevent:TestEvent',
         ],
-        'wishbone.output': [
+        'wishbone.module.output': [
             'null = wishbone.module.null:Null',
             'stdout = wishbone.module.stdout:STDOUT',
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
-        'wishbone.lookup': [
+        'wishbone.function.encode': [
+            'json = wishbone.function.encode_json:encodeJSONWrapper'
+        ],
+        'wishbone.function.decode': [
+            'json = wishbone.function.decode_json:decodeJSONWrapper'
+        ],
+        'wishbone.function.process': [
+            'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
+            'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper'
+        ],
+        'wishbone.lookup.internal': [
             'choice = wishbone.lookup.choice:Choice',
             'cycle = wishbone.lookup.cycle:Cycle',
-            'etcd = wishbone.lookup.etcd:ETCD',
             'event = wishbone.lookup.event:EventLookup',
             'pid = wishbone.lookup.pid:PID',
             'random_bool = wishbone.lookup.random_bool:RandomBool',
             'random_integer = wishbone.lookup.random_integer:RandomInteger',
             'random_word = wishbone.lookup.random_word:RandomWord',
             'random_uuid = wishbone.lookup.random_uuid:RandomUUID'
+        ],
+        'wishbone.lookup.external': [
+            'etcd = wishbone.lookup.etcd:ETCD',
         ]
     }
 )
