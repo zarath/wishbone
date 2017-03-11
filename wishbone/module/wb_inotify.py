@@ -31,19 +31,16 @@ from wishbone import Actor
 # todo(smetj): Fix dirty monkey patch of inotify select
 import sys
 from gevent import monkey; monkey.patch_all()
-from gevent import select
 sys.modules["select"] = sys.modules["gevent.select"]
 sys.modules["select"].epoll = sys.modules["select"].poll
 
 from inotify.adapters import Inotify
-from inotify.adapters import _LOGGER
 from inotify import constants
 
 from wishbone.event import Event
 from gevent import sleep
 import os
 import fnmatch
-import traceback
 
 
 class WBInotify(Actor):
