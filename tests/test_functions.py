@@ -22,23 +22,29 @@
 #
 #
 
+from wishbone import ComponentManager
 from wishbone.event import Event
-from wishbone.module.jsonencode import JSONEncode
-from wishbone.actor import ActorConfig
-from wishbone.utils.test import getter
 
+def test_wishbone_function_decode_json():
 
-def test_module_jsonencode():
+    e = Event('{"one": 1}')
+    f = ComponentManager().getComponentByName("wishbone.function.decode.json")()
+    assert f(e).get() == {"one": 1}
 
-    actor_config = ActorConfig('jsonencode', 100, 1, {}, "")
-    jsonencode = JSONEncode(actor_config)
+def test_wishbone_function_encode_json():
 
-    jsonencode.pool.queue.inbox.disableFallThrough()
-    jsonencode.pool.queue.outbox.disableFallThrough()
-    jsonencode.start()
+    e = Event({"one": 1})
+    f = ComponentManager().getComponentByName("wishbone.function.encode.json")()
+    assert f(e).get() == '{"one": 1}'
 
-    e = Event(["one", "two", "three"])
+def test_wishbone_function_process_uppercase():
 
-    jsonencode.pool.queue.inbox.put(e)
-    one = getter(jsonencode.pool.queue.outbox)
-    assert one.get() == '["one", "two", "three"]'
+    e = Event({"case": "upper"})
+    f = ComponentManager().getComponentByName("wishbone.function.process.uppercase")("@data.case", "@data.case")
+    assert f(e).get() == {"case": "UPPER"}
+
+def test_wishbone_function_process_lowercase():
+
+    e = Event({"case": "LOWER"})
+    f = ComponentManager().getComponentByName("wishbone.function.process.lowercase")("@data.case", "@data.case")
+    assert f(e).get() == {"case": "lower"}
