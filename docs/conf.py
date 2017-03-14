@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Wishbone documentation build configuration file, created by
-# sphinx-quickstart on Tue Mar 29 23:20:54 2016.
+# sphinx-quickstart on Tue Mar 29 23:20:54 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -87,7 +87,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Wishbone'
-copyright = u'2016, Jelle Smet'
+copyright = u'2017, Jelle Smet'
 author = u'Jelle Smet'
 
 # The version info for the project you're documenting, acts as replacement for
