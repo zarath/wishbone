@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-#
 # -*- coding: utf-8 -*-
 #
-#
+# queue.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
