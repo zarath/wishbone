@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  setup.py
+#  actor.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -78,6 +78,7 @@ class ActorConfig(object):
         self.lookup = lookup
         self.description = description
         self.functions = functions
+
 
 class Actor():
 
