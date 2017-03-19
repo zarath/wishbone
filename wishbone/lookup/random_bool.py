@@ -25,6 +25,7 @@
 from wishbone.lookup import Lookup
 from random import getrandbits
 
+
 class RandomBool(Lookup):
 
     '''

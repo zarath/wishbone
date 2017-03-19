@@ -233,4 +233,3 @@ class ConfigFile(object):
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_syslog"] = AttrDict({'description': "Writes all incoming messags to syslog.", 'module': "wishbone.module.output.syslog", "arguments": {"ident": self.identification}, "context": "_logs", "functions": {}})
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")
-

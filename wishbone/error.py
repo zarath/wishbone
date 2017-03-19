@@ -67,6 +67,7 @@ class FunctionInitFailure(Exception):
 class NoSuchModule(Exception):
     pass
 
+
 class NoSuchComponent(Exception):
     pass
 
@@ -86,14 +87,18 @@ class BulkFull(Exception):
 class InvalidData(Exception):
     pass
 
+
 class InvalidComponent(Exception):
     pass
+
 
 class InvalidModule(Exception):
     pass
 
+
 class ModuleNotReady(Exception):
     pass
+
 
 class InvalidConfig(Exception):
     pass

@@ -25,6 +25,7 @@
 from wishbone.error import QueueEmpty
 from gevent import sleep
 
+
 def getter(queue):
     counter = 0
     while True:

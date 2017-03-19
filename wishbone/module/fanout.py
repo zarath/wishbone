@@ -59,4 +59,3 @@ class Fanout(Actor):
 
         for queue in self.destinations:
             self.submit(event.clone(), queue)
-

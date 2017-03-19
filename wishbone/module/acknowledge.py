@@ -28,6 +28,7 @@ from wishbone.lookup import EventLookup
 from random import SystemRandom
 import string
 
+
 class AckList(object):
 
     def __init__(self):
@@ -52,7 +53,6 @@ class AckList(object):
             else:
                 self.ack_table.append(value)
                 return True
-
 
 
 class Acknowledge(Actor):
@@ -124,7 +124,6 @@ class Acknowledge(Actor):
         else:
             self.logging.debug("Event with still unacknowledged <ack_id> '%s' send to <dropped> queue." % (self.kwargs.ack_id))
             self.pool.queue.dropped.put(event)
-
 
     def acknowledge(self, event):
         if self.kwargs.ack_id is None:

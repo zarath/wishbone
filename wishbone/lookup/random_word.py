@@ -68,4 +68,3 @@ class RandomWord(Lookup):
                 return word.encode("latin-1", "ignore")
             except:
                 pass
-
