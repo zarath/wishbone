@@ -107,10 +107,11 @@ class DictGenerator(Actor):
 
         while self.loop():
             d = self.getDict()
-            event = Event(d)
+            event = Event(d, self.config.confirmation_modules)
             self.submit(event, self.pool.queue.outbox)
             self.key_number = +1
             sleep(self.kwargs.interval)
+            event.getConfirmation()
 
     def getDictPredefinedKeys(self):
 

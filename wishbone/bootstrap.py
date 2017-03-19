@@ -145,7 +145,7 @@ class Dispatch():
             router.stop()
 
         e = Event()
-        e.clear()
+        # e.clear()
         signal(2, e.set)
 
         if self.profile:

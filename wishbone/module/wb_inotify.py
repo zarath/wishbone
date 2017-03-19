@@ -137,8 +137,9 @@ class WBInotify(Actor):
 
                 if self.kwargs.initial_listing:
                     for p in self.__getAllFiles(path, glob_pattern):
-                        e = Event({"path": os.path.abspath(p), "inotify_type": "WISHBONE_INIT"})
+                        e = Event({"path": os.path.abspath(p), "inotify_type": "WISHBONE_INIT"}, confirmation_modules=self.config.confirmation_modules)
                         self.pool.queue.outbox.put(e)
+                        e.getConfirmation()
                 try:
                     for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
                         self.pool.queue.outbox.put(Event({"path": abs_path, "inotify_type": i_type}))

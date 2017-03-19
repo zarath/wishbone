@@ -82,6 +82,9 @@ SCHEMA = {
                         },
                         "functions": {
                             "type": "object"
+                        },
+                        "confirmation_modules": {
+                            "type": "array"
                         }
                     },
                     "required": ["module"],
@@ -109,13 +112,19 @@ class ConfigFile(object):
         self.__addMetricFunnel()
         self.load(filename)
 
-    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}):
+    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}, confirmation_modules=[]):
 
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
 
         if name not in self.config["modules"]:
-            self.config["modules"][name] = AttrDict({'description': description, 'module': module, 'arguments': arguments, 'context': context, 'functions': functions})
+            self.config["modules"][name] = AttrDict({
+                'description': description,
+                'module': module,
+                'arguments': arguments,
+                'context': context,
+                'functions': functions,
+                'confirmation_modules': confirmation_modules})
             self.addConnection(name, "logs", "_logs", name, context="_logs")
             self.addConnection(name, "metrics", "_metrics", name, context="_metrics")
 

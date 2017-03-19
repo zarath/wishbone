@@ -25,6 +25,7 @@
 import arrow
 import time
 from wishbone.error import BulkFull, InvalidData
+from gevent.event import Event as Gevent_Event
 
 EVENT_RESERVED = ["@timestamp", "@version", "@data", "@tmp", "@errors"]
 
@@ -156,7 +157,7 @@ class Event(object):
     module to the other.
     '''
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, confirmation_modules=[]):
 
         self.data = {
             "@timestamp": time.time(),
@@ -167,6 +168,37 @@ class Event(object):
             "@errors": {
             }
         }
+
+        self.confirmation_modules = confirmation_modules
+        if confirmation_modules != []:
+            self.__confirm = Gevent_Event()
+            self.__confirm.clear()
+            self.getConfirmation = self.__getConfirmation
+            self.config = self.__confirm
+        else:
+            self.getConfirmation = self.__dummy
+            self.confirm = self.__dummy
+
+    def __getConfirmation(self):
+
+        '''
+        Blocks util the <confirm> method has been called by the intended upstream
+        module.
+        '''
+
+        self.__confirm.wait()
+
+    def __confirm(self):
+
+        '''
+        Unblocks the caller calling the <getConfirmation> method
+        '''
+
+        self.__confirm.set()
+
+    def __dummy(self):
+
+        pass
 
     def clone(self):
         '''
@@ -333,3 +365,6 @@ class Event(object):
             return out
         else:
             return org
+
+
+

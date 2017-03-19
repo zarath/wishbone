@@ -61,7 +61,7 @@ class ActorConfig(object):
         functions (dict): A dict of queue names containing an array of functions
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}):
+    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[]):
 
         '''
         Args:
@@ -70,7 +70,8 @@ class ActorConfig(object):
             frequency (int): The time in seconds to generate metrics.
             lookup (dict): A dictionary of lookup methods.
             description (str): A short free form discription of the actor instance.
-            functions (dict): A dict of queue names containing an array of functions
+            functions (dict): A dict of queue names containing an array of functions.
+            confirmation_modules (array): The name of the module instance responsible to confirm events
         '''
         self.name = name
         self.size = size
@@ -78,6 +79,7 @@ class ActorConfig(object):
         self.lookup = lookup
         self.description = description
         self.functions = functions
+        self.confirmation_modules = confirmation_modules
 
 
 class Actor():
@@ -332,6 +334,9 @@ class Actor():
                 self.submit(event, self.pool.queue.failed)
             else:
                 self.submit(event, self.pool.queue.success)
+
+            if self.name in event.confirmation_modules:
+                event.confirm()
 
     def __validateAppliedFunctions(self):
 

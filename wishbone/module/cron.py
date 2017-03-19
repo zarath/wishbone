@@ -68,7 +68,8 @@ class Cron(Actor):
         while self.loop():
             if self.cron.check_trigger(time.localtime(time.time())[:5]):
                 self.logging.info("Cron fired.")
-                e = Event()
+                e = Event(confirmation_modules=self.config.confirmation_modules)
                 e.set(self.kwargs.payload, self.kwargs.field)
                 self.submit(e, self.pool.queue.outbox)
+                e.getConfirmation()
             sleep(60)
