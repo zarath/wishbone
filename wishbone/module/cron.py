@@ -72,4 +72,3 @@ class Cron(Actor):
                 e.set(self.kwargs.payload, self.kwargs.field)
                 self.submit(e, self.pool.queue.outbox)
             sleep(60)
-

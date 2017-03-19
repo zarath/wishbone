@@ -215,7 +215,7 @@ class Dispatch():
 
         component_manager = ComponentManager()
 
-        if self.docs != None:
+        if self.docs is not None:
             component_manager.validateComponentName(self.docs)
             component_manager.exists(self.docs)
 
@@ -227,19 +227,19 @@ class Dispatch():
                 version = component_manager.getComponentVersion(namespace, component_type, category, name)
                 header = "%s.%s.%s.%s" % (namespace, component_type, category, name)
                 print("")
-                print(("="*len(header)))
+                print(("=" * len(header)))
                 print(header)
-                print(("="*len(header)))
+                print(("=" * len(header)))
                 print("")
                 print(("Version: %s" % (version)))
                 print("")
                 print(title)
-                print(("-"*len(title)))
+                print(("-" * len(title)))
                 print((component_manager.getComponentDoc(namespace, component_type, category, name)))
             except Exception as err:
                 print("Failed to load component '%s'. Reason: %s" % (self.docs, err))
 
-        if self.code != None:
+        if self.code is not None:
 
             component_manager.validateComponentName(self.code)
             component_manager.exists(self.code)

@@ -40,4 +40,3 @@ def processUppercaseWrapper(source='@data', destination='@data', *args, **kwargs
         return event
 
     return processUppercase
-

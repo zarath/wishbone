@@ -41,4 +41,3 @@ def decodeJSONWrapper(source='@data', destination='@data', *args, **kwargs):
         return event
 
     return decodeJSON
-
