@@ -335,8 +335,13 @@ class Actor():
             else:
                 self.submit(event, self.pool.queue.success)
 
-            if self.name in event.confirmation_modules:
-                event.confirm()
+            if isinstance(event, Bulk):
+                for e in event.dump():
+                    if self.name in e.confirmation_modules:
+                        e.confirm()
+            else:
+                if self.name in event.confirmation_modules:
+                    event.confirm()
 
     def __validateAppliedFunctions(self):
 
