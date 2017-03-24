@@ -48,3 +48,15 @@ def test_wishbone_function_process_lowercase():
     e = Event({"case": "LOWER"})
     f = ComponentManager().getComponentByName("wishbone.function.process.lowercase")("@data.case", "@data.case")
     assert f(e).get() == {"case": "lower"}
+
+def test_wishbone_function_encode_msgpack():
+
+    e = Event({"one": 1})
+    f = ComponentManager().getComponentByName("wishbone.function.encode.msgpack")()
+    assert f(e).get() == b'\x81\xa3one\x01'
+
+def test_wishbone_function_decode_msgpack():
+
+    e = Event(b'\x81\xa3one\x01')
+    f = ComponentManager().getComponentByName("wishbone.function.decode.msgpack")()
+    assert f(e).get() == {b"one": 1}
