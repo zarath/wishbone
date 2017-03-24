@@ -43,7 +43,8 @@ install_requires = [
     'requests',
     'uplook==1.1.0',
     'pyyaml',
-    'jsonschema'
+    'jsonschema',
+    'msgpack-python'
 ]
 
 dependency_links = [
@@ -132,10 +133,12 @@ setup(
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
         'wishbone.function.encode': [
-            'json = wishbone.function.encode_json:encodeJSONWrapper'
+            'json = wishbone.function.encode_json:encodeJSONWrapper',
+            'msgpack = wishbone.function.encode_msgpack:encodeMSGPackWrapper'
         ],
         'wishbone.function.decode': [
-            'json = wishbone.function.decode_json:decodeJSONWrapper'
+            'json = wishbone.function.decode_json:decodeJSONWrapper',
+            'msgpack = wishbone.function.decode_msgpack:decodeMSGPackWrapper'
         ],
         'wishbone.function.process': [
             'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
