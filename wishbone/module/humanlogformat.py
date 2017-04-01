@@ -25,13 +25,14 @@
 
 
 from wishbone import Actor
+from wishbone.module import ProcessModule
 from wishbone.event import Log
 from time import strftime, localtime
 import os
 import sys
 
 
-class HumanLogFormat(Actor):
+class HumanLogFormat(Actor, ProcessModule):
 
     '''**Converts the internal log format into human readable form.**
 

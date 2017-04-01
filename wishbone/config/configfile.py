@@ -29,6 +29,24 @@ from jsonschema import validate
 SCHEMA = {
     "type": "object",
     "properties": {
+        "protocols": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "type": "object",
+                    "properties": {
+                        "protocol": {
+                            "type": "string"
+                        },
+                        "arguments": {
+                            "type": "object"
+                        }
+                    },
+                    "required": ["protocol"],
+                    "additionalProperties": False
+                }
+            }
+        },
         "functions": {
             "type": "object",
             "patternProperties": {
@@ -74,6 +92,9 @@ SCHEMA = {
                         "module": {
                             "type": "string"
                         },
+                        "protocol": {
+                            "type": "string"
+                        },
                         "description": {
                             "type": "string"
                         },
@@ -112,7 +133,7 @@ class ConfigFile(object):
         self.__addMetricFunnel()
         self.load(filename)
 
-    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}, confirmation_modules=[]):
+    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}, confirmation_modules=[], protocol=None):
 
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
@@ -124,7 +145,8 @@ class ConfigFile(object):
                 'arguments': arguments,
                 'context': context,
                 'functions': functions,
-                'confirmation_modules': confirmation_modules})
+                'confirmation_modules': confirmation_modules,
+                'protocol': protocol})
             self.addConnection(name, "logs", "_logs", name, context="_logs")
             self.addConnection(name, "metrics", "_metrics", name, context="_metrics")
 
@@ -144,6 +166,13 @@ class ConfigFile(object):
             self.config["functions"][name] = AttrDict({"function": function, "arguments": arguments})
         else:
             raise Exception("Function instance name '%s' is already taken." % (name))
+
+    def addProtocol(self, name, protocol, arguments={}):
+
+        if name not in self.config["protocols"]:
+            self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments})
+        else:
+            raise Exception("Protocol instance name '%s' is already taken." % (name))
 
     def addConnection(self, source_module, source_queue, destination_module, destination_queue, context="configfile"):
 
@@ -171,6 +200,10 @@ class ConfigFile(object):
         if "functions" in config:
             for function in config["functions"]:
                 self.addFunction(name=function, **config["functions"][function])
+
+        if "protocols" in config:
+            for protocol in config["protocols"]:
+                self.addProtocol(name=protocol, **config["protocols"][protocol])
 
         for module in config["modules"]:
             self.addModule(name=module, **config["modules"][module])

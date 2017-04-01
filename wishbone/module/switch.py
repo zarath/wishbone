@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from wishbone.error import ModuleInitFailure, ReservedName
 
 

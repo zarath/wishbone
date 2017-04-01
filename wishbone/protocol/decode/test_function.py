@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  test_function.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,31 +22,29 @@
 #
 #
 
-from enum import Enum
-from wishbone.protocol.decode.dummy import Dummy as DummyDecoder
-from wishbone.protocol.encode.dummy import Dummy as DummyEncoder
+from plain import Plain
 
 
-class ModuleType(Enum):
-    INPUT = 1
-    OUTPUT = 2
-    FLOW = 3
-    PROCESS = 4
+
+def main():
+    stream = [
+        b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxzxxxxxxxxxx",
+        b"xxxxxxxxxxxxxxxxxxxxzxxxxxxxxxxxxzxxxxxxxxxxxx",
+        b"xxxxxxxxxxxxxxxxxxxxzxxxxxxxxxxxxzxxxxxxxxxxxx",
+        b"xxxxxxxxxxxxxxxxxxxxzxxxxxxxxxxxxzxxxxxxxxxxxx",
+        b"xxxxxzxxxxzxxxxxzxxxxxxxxxvvvvxxxxxzxxxxxxxxxx",
+        None
+    ]
+
+    # for s in stream:
+    #     for item in Plain(delimiter="z").decode(s):
+    #         print(item)
+
+    p = Plain(delimiter=None)
+    for s in stream:
+        for item in p.decode(s):
+            print(item)
 
 
-class InputModule(object):
-    MODULE_TYPE = ModuleType.INPUT
-    decode = DummyDecoder().decode
-
-
-class OutputModule(object):
-    MODULE_TYPE = ModuleType.OUTPUT
-    encode = DummyEncoder().encode
-
-
-class FlowModule(object):
-    MODULE_TYPE = ModuleType.FLOW
-
-
-class ProcessModule(object):
-    MODULE_TYPE = ModuleType.PROCESS
+if __name__ == "__main__":
+    main()

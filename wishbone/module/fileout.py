@@ -24,12 +24,13 @@
 
 
 from wishbone import Actor
+from wishbone.module import OutputModule
 from wishbone.event import Bulk
 from gevent.os import make_nonblocking
 import arrow
 
 
-class FileOut(Actor):
+class FileOut(Actor, OutputModule):
 
     '''**Writes events to a file**
 

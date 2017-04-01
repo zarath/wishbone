@@ -23,10 +23,11 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from wishbone.event import Bulk
 
 
-class Deserialize(Actor):
+class Deserialize(Actor, FlowModule):
 
     '''**Deserializes Bulk events or arrays.**
 

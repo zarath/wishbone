@@ -23,11 +23,12 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from gevent import sleep
 from wishbone.event import Event
 
 
-class Fresh(Actor):
+class Fresh(Actor, FlowModule):
 
     '''**Generates a new event unless an event came through in the last x time.**
 

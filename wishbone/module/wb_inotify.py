@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import InputModule
 
 # I know no other working way to actually monkey patch select
 # when inotify is imported.
@@ -43,7 +44,7 @@ import os
 import fnmatch
 
 
-class WBInotify(Actor):
+class WBInotify(Actor, InputModule):
 
     '''**Monitors one or more paths for inotify events.**
 

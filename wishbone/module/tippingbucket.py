@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from wishbone.event import Bulk
 from wishbone.error import BulkFull
 from gevent import sleep
@@ -79,7 +80,7 @@ class Bucket(object):
         self._timer = self.age
 
 
-class TippingBucket(Actor):
+class TippingBucket(Actor, FlowModule):
 
     '''**Aggregates multiple events into bulk.**
 

@@ -40,6 +40,8 @@ from sys import exc_info
 from uplook import UpLook
 import traceback
 import inspect
+from wishbone.error import InvalidModule
+from wishbone.module import ModuleType
 
 Greenlets = namedtuple('Greenlets', "consumer generic log metric")
 
@@ -61,7 +63,7 @@ class ActorConfig(object):
         functions (dict): A dict of queue names containing an array of functions
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[]):
+    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[], protocol=None):
 
         '''
         Args:
@@ -72,6 +74,7 @@ class ActorConfig(object):
             description (str): A short free form discription of the actor instance.
             functions (dict): A dict of queue names containing an array of functions.
             confirmation_modules (array): The name of the module instance responsible to confirm events
+            protcol (func): The decode function of a Wishbone protocol class
         '''
         self.name = name
         self.size = size
@@ -80,6 +83,7 @@ class ActorConfig(object):
         self.description = description
         self.functions = functions
         self.confirmation_modules = confirmation_modules
+        self.protocol = protocol
 
 
 class Actor():
@@ -113,6 +117,7 @@ class Actor():
         self.__buildUplook()
 
         self.stopped = True
+        self.__validateProtocolSettings()
 
     def connect(self, source, destination_module, destination_queue):
         '''Connects the <source> queue to the <destination> queue.
@@ -357,3 +362,24 @@ class Actor():
         for queue in self.config.functions.keys():
             if queue not in queues_w_registered_consumers:
                 raise ModuleInitFailure("Failed to initialize module '%s'. You have functions defined on queue '%s' which doesn't have a registered consumer." % (self.name, queue))
+
+
+    def __validateProtocolSettings(self):
+
+        '''Checks whether the module is of type input or output and whether it
+        has a protocol encoder/decoder set.'''
+
+        if not hasattr(self, "MODULE_TYPE"):
+            raise InvalidModule("Module instance '%s' seems to be of an incompatible old type." % (self.name))
+
+        if self.MODULE_TYPE == ModuleType.INPUT:
+            if self.config.protocol is None:
+                self.logging.debug("Module of type <INPUT> with no decoder set.  Applying dummy decoder.")
+            else:
+                self.decode = self.config.protocol
+
+        if self.MODULE_TYPE == ModuleType.OUTPUT:
+            if self.config.protocol is None:
+                self.logging.debug("Module of type <OUTPUT> with no encoder set.  Applying dummy encoder.")
+            else:
+                self.encode = self.config.protocol

@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import ProcessModule
 from copy import deepcopy
 import re
 import arrow
@@ -43,7 +44,7 @@ VALID_EXPRESSIONS = ["add_item",
                      ]
 
 
-class Modify(Actor):
+class Modify(Actor, ProcessModule):
 
     '''**Modify and manipulate datastructures.**
 
