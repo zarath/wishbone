@@ -23,13 +23,14 @@
 #
 
 from wishbone import Actor
+from wishbone.module import InputModule
 from wishbone.event import Event
 from cronex import CronExpression
 from gevent import sleep
 import time
 
 
-class Cron(Actor):
+class Cron(Actor, InputModule):
 
     '''**Generates an event at the defined time**
 

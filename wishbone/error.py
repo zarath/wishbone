@@ -102,3 +102,6 @@ class ModuleNotReady(Exception):
 
 class InvalidConfig(Exception):
     pass
+
+class InvalidEventFormat(Exception):
+    pass

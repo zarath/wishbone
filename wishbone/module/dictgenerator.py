@@ -25,6 +25,7 @@ from sys import version_info
 from random import choice, randint
 from gevent import sleep
 from wishbone import Actor
+from wishbone.module import InputModule
 from wishbone.event import Event
 import os
 
@@ -33,7 +34,7 @@ if version_info[0] == 2:
     from io import open
 
 
-class DictGenerator(Actor):
+class DictGenerator(Actor, InputModule):
 
     '''**Generates random dictionaries.**
 

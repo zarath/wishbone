@@ -23,9 +23,10 @@
 #
 
 from wishbone import Actor
+from wishbone.module import OutputModule
 
 
-class Null(Actor):
+class Null(Actor, OutputModule):
 
     '''**Purges incoming events.**
 

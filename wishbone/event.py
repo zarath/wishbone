@@ -24,7 +24,7 @@
 
 import arrow
 import time
-from wishbone.error import BulkFull, InvalidData
+from wishbone.error import BulkFull, InvalidData, InvalidEventFormat
 from gevent.event import Event as Gevent_Event
 
 EVENT_RESERVED = ["@timestamp", "@version", "@data", "@tmp", "@errors"]
@@ -47,7 +47,7 @@ class Bulk(object):
             if self.max_size is None or len(self.__events) < self.max_size:
                 self.__events.append(event)
             else:
-                    raise BulkFull("Max number of events (%s) is reached." % (self.max_size))
+                raise BulkFull("Max number of events (%s) is reached." % (self.max_size))
         else:
             raise InvalidData()
 
@@ -180,7 +180,6 @@ class Event(object):
             self.confirm = self.__dummy
 
     def __getConfirmation(self):
-
         '''
         Blocks util the <confirm> method has been called by the intended upstream
         module.
@@ -189,7 +188,6 @@ class Event(object):
         self.__confirm.wait()
 
     def __confirm(self):
-
         '''
         Unblocks the caller calling the <getConfirmation> method
         '''
@@ -220,6 +218,29 @@ class Event(object):
 
         self.set(self.deepish_copy(self.get(source)), destination)
 
+    def deepish_copy(self, org):
+        '''
+        much, much faster than deepcopy, for a dict of the simple python types.
+
+        Blatantly ripped off from https://writeonly.wordpress.com/2009/05/07
+        /deepcopy-is-a-pig-for-simple-data/
+        '''
+
+        if isinstance(org, dict):
+            out = dict().fromkeys(org)
+            for k, v in list(org.items()):
+                try:
+                    out[k] = v.copy()   # dicts, sets
+                except AttributeError:
+                    try:
+                        out[k] = v[:]   # lists, tuples, strings, unicode
+                    except TypeError:
+                        out[k] = v      # ints
+
+            return out
+        else:
+            return org
+
     def delete(self, key=None):
         '''
         Deletes a key.
@@ -240,6 +261,47 @@ class Event(object):
                 del(self.get(key)[s[-1]])
             else:
                 del(self.data[key])
+
+    def dict_merge(self, dct, merge_dct):
+        """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
+        updating only top-level keys, dict_merge recurses down into dicts nested
+        to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
+        ``dct``.
+
+        Stolen from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
+
+        :param dct: dict onto which the merge is executed
+        :param merge_dct: dct merged into dct
+        :return: None
+        """
+        for k, v in list(merge_dct.items()):
+            if k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], dict):
+                self.dict_merge(dct[k], merge_dct[k])
+            else:
+                dct[k] = merge_dct[k]
+
+    def dump(self, complete=False, convert_timestamp=True):
+        '''
+        Dumps the content of the event.
+
+        :param bool complete: Determines whether to include @tmp and @errors.
+        :param bool convert_timestamp: When True converts <Arrow> object to iso8601 string.
+        :return: The content of the event.
+        :rtype: dict
+        '''
+
+        d = {}
+        for key, value in list(self.data.items()):
+            if key == "@tmp" and not complete:
+                continue
+            if key == "@errors" and not complete:
+                continue
+            elif isinstance(value, arrow.arrow.Arrow) and convert_timestamp:
+                d[key] = str(value)
+            else:
+                d[key] = value
+
+        return d
 
     def get(self, key="@data"):
         '''
@@ -299,72 +361,32 @@ class Event(object):
         self.dict_merge(self.data, result)
         # self.data.update(result)
 
-    def dump(self, complete=False, convert_timestamp=True):
+    def slurp(self, data):
+        '''Expects <data> to be a dict representation of an <Event> and
+        alligns this event to it.
+
+        The @timestamp field will be reset to the time this method has been
+        called.
+
+        :param dict data: The dict object containing the complete event.
+        :return: None
         '''
-        Dumps the content of the event.
 
-        :param bool complete: Determines whether to include @tmp and @errors.
-        :param bool convert_timestamp: When True converts <Arrow> object to iso8601 string.
-        :return: The content of the event.
-        :rtype: dict
-        '''
-
-        d = {}
-        for key, value in list(self.data.items()):
-            if key == "@tmp" and not complete:
-                continue
-            if key == "@errors" and not complete:
-                continue
-            elif isinstance(value, arrow.arrow.Arrow) and convert_timestamp:
-                d[key] = str(value)
-            else:
-                d[key] = value
-
-        return d
+        try:
+            assert isinstance(data, dict), "event.slurp() expects a dict."
+            for item in [
+                ("@timestamp", int),
+                ("@version", int),
+                ("@data", None),
+                ("@tmp", dict),
+                ("@errors", dict),
+            ]:
+                assert item[0] in data, "%s is missing" % (item[0])
+                if item[1] is not None:
+                    assert isinstance(data[item[0]], item[1]), "%s type '%s' is not valid." % (item[0], item[1])
+        except AssertionError as err:
+            raise InvalidEventFormat("The incoming data could not be used to construct an event.  Reason: '%s'." % err)
+        else:
+            self.data["@timestamp"] = time.time()
 
     raw = dump
-
-    def dict_merge(self, dct, merge_dct):
-
-        """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-        updating only top-level keys, dict_merge recurses down into dicts nested
-        to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
-        ``dct``.
-
-        Stolen from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
-
-        :param dct: dict onto which the merge is executed
-        :param merge_dct: dct merged into dct
-        :return: None
-        """
-        for k, v in list(merge_dct.items()):
-            if k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], dict):
-                self.dict_merge(dct[k], merge_dct[k])
-            else:
-                dct[k] = merge_dct[k]
-
-    def deepish_copy(self, org):
-        '''
-        much, much faster than deepcopy, for a dict of the simple python types.
-
-        Blatantly ripped off from https://writeonly.wordpress.com/2009/05/07
-        /deepcopy-is-a-pig-for-simple-data/
-        '''
-
-        if isinstance(org, dict):
-            out = dict().fromkeys(org)
-            for k, v in list(org.items()):
-                try:
-                    out[k] = v.copy()   # dicts, sets
-                except AttributeError:
-                    try:
-                        out[k] = v[:]   # lists, tuples, strings, unicode
-                    except TypeError:
-                        out[k] = v      # ints
-
-            return out
-        else:
-            return org
-
-
-

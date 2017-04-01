@@ -23,9 +23,10 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 
 
-class Fanout(Actor):
+class Fanout(Actor, FlowModule):
 
     '''**Forward each incoming message to all connected queues.**
 

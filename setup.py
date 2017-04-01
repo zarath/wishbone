@@ -106,6 +106,10 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': ['wishbone = wishbone.bootstrap:main'],
+        'wishbone.protocol.decode': [
+            'dummy = wishbone.protocol.decode.dummy.Dummy'
+            'plain = wishbone.protocol.decode.plain.Plain'
+        ],
         'wishbone.module.flow': [
             'acknowledge = wishbone.module.acknowledge:Acknowledge',
             'deserialize = wishbone.module.deserialize:Deserialize',

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  dummy.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,31 +22,13 @@
 #
 #
 
-from enum import Enum
-from wishbone.protocol.decode.dummy import Dummy as DummyDecoder
-from wishbone.protocol.encode.dummy import Dummy as DummyEncoder
+from wishbone.protocol import Decode
 
 
-class ModuleType(Enum):
-    INPUT = 1
-    OUTPUT = 2
-    FLOW = 3
-    PROCESS = 4
+class Dummy(Decode):
 
+    def __init__(self, *args, **kwargs):
+        pass
 
-class InputModule(object):
-    MODULE_TYPE = ModuleType.INPUT
-    decode = DummyDecoder().decode
-
-
-class OutputModule(object):
-    MODULE_TYPE = ModuleType.OUTPUT
-    encode = DummyEncoder().encode
-
-
-class FlowModule(object):
-    MODULE_TYPE = ModuleType.FLOW
-
-
-class ProcessModule(object):
-    MODULE_TYPE = ModuleType.PROCESS
+    def deccode(self, data):
+        return [data]

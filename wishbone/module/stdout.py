@@ -23,6 +23,7 @@
 #
 from gevent import monkey; monkey.patch_sys(stdin=False, stdout=True, stderr=False)
 from wishbone import Actor
+from wishbone.module import OutputModule
 from os import getpid
 from colorama import init, Fore, Back, Style
 import sys
@@ -60,7 +61,7 @@ class Format():
         return "PID-%s: %s" % (self.pid_value, data)
 
 
-class STDOUT(Actor):
+class STDOUT(Actor, OutputModule):
 
     '''**Prints incoming events to STDOUT.**
 

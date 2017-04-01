@@ -23,11 +23,12 @@
 #
 
 from wishbone import Actor
+from wishbone.module import InputModule
 from wishbone.event import Event
 from gevent import sleep
 
 
-class TestEvent(Actor):
+class TestEvent(Actor, InputModule):
 
     '''**Generates a test event at the chosen interval.**
 

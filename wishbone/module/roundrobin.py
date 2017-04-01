@@ -24,11 +24,12 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from itertools import cycle
 from random import randint
 
 
-class RoundRobin(Actor):
+class RoundRobin(Actor, FlowModule):
 
     '''**Round-robins incoming events to all connected queues.**
 

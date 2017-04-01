@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import OutputModule
 from wishbone.event import Log
 from wishbone.event import Bulk
 import syslog
@@ -30,7 +31,7 @@ import sys
 import os
 
 
-class Syslog(Actor):
+class Syslog(Actor, OutputModule):
 
     '''**Writes log events to syslog.**
 

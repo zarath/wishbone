@@ -23,6 +23,7 @@
 #
 
 from wishbone import Actor
+from wishbone.module import FlowModule
 from gevent.lock import Semaphore
 from wishbone.lookup import EventLookup
 from random import SystemRandom
@@ -55,7 +56,7 @@ class AckList(object):
                 return True
 
 
-class Acknowledge(Actor):
+class Acknowledge(Actor, FlowModule):
 
     '''**Lets events pass or not based on some event value present or not in a lookup table.**
 

@@ -22,31 +22,20 @@
 #
 #
 
-from enum import Enum
-from wishbone.protocol.decode.dummy import Dummy as DummyDecoder
-from wishbone.protocol.encode.dummy import Dummy as DummyEncoder
+from wishbone.error import InvalidEventFormat
+from wishbone.event import Event
+
+class Decode(object):
+
+    def decode(self, data):
+        pass
+
+class Encode(object):
+
+    def encode(self, data):
+        pass
 
 
-class ModuleType(Enum):
-    INPUT = 1
-    OUTPUT = 2
-    FLOW = 3
-    PROCESS = 4
 
 
-class InputModule(object):
-    MODULE_TYPE = ModuleType.INPUT
-    decode = DummyDecoder().decode
 
-
-class OutputModule(object):
-    MODULE_TYPE = ModuleType.OUTPUT
-    encode = DummyEncoder().encode
-
-
-class FlowModule(object):
-    MODULE_TYPE = ModuleType.FLOW
-
-
-class ProcessModule(object):
-    MODULE_TYPE = ModuleType.PROCESS
