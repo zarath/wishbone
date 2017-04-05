@@ -26,8 +26,7 @@ from wishbone import Actor
 from wishbone.module import FlowModule
 
 
-
-class Funnel(FlowModule):
+class Funnel(Actor, FlowModule):
 
     '''**Funnel multiple incoming queues to 1 outgoing queue.**
 

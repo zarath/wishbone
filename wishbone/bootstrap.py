@@ -30,7 +30,7 @@ import sys
 os.environ["TZ"] = ":/etc/localtime"
 
 from wishbone.router import Default
-from wishbone import ComponentManager
+from wishbone.componentmanager import ComponentManager
 from wishbone.config import ConfigFile
 from wishbone.utils import PIDFile
 from gevent import signal

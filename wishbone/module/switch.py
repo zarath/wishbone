@@ -27,7 +27,7 @@ from wishbone.module import FlowModule
 from wishbone.error import ModuleInitFailure, ReservedName
 
 
-class Switch(Actor):
+class Switch(Actor, FlowModule):
 
     '''**Switch outgoing queues while forwarding events.**
 

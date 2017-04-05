@@ -38,6 +38,9 @@ SCHEMA = {
                         "protocol": {
                             "type": "string"
                         },
+                        "event": {
+                            "type": "boolean"
+                        },
                         "arguments": {
                             "type": "object"
                         }
@@ -128,7 +131,7 @@ class ConfigFile(object):
         self.identification = identification
         self.colorize = colorize
         self.logstyle = logstyle
-        self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "functions": AttrDict({}), "routingtable": []})
+        self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "functions": AttrDict({}), "protocols": AttrDict({}), "routingtable": []})
         self.__addLogFunnel()
         self.__addMetricFunnel()
         self.load(filename)
@@ -167,10 +170,10 @@ class ConfigFile(object):
         else:
             raise Exception("Function instance name '%s' is already taken." % (name))
 
-    def addProtocol(self, name, protocol, arguments={}):
+    def addProtocol(self, name, protocol, arguments={}, event=False):
 
         if name not in self.config["protocols"]:
-            self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments})
+            self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments, "event": event})
         else:
             raise Exception("Protocol instance name '%s' is already taken." % (name))
 
@@ -203,7 +206,12 @@ class ConfigFile(object):
 
         if "protocols" in config:
             for protocol in config["protocols"]:
-                self.addProtocol(name=protocol, **config["protocols"][protocol])
+                self.addProtocol(
+                    name=protocol,
+                    protocol=config["protocols"][protocol].get("protocol", None),
+                    arguments=config["protocols"][protocol].get("arguments", {}),
+                    event=config["protocols"][protocol].get("event", False)
+                )
 
         for module in config["modules"]:
             self.addModule(name=module, **config["modules"][module])

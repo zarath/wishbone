@@ -27,8 +27,10 @@ from wishbone.logging import Logging
 from wishbone.event import Event as Wishbone_Event
 from wishbone.event import Metric
 from wishbone.event import Bulk
-from wishbone.error import QueueConnected, ModuleInitFailure
+from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule
 from wishbone.lookup import EventLookup
+from wishbone.module import ModuleType
+
 from uplook.errors import NoSuchValue
 from collections import namedtuple
 from gevent import spawn, kill
@@ -40,8 +42,6 @@ from sys import exc_info
 from uplook import UpLook
 import traceback
 import inspect
-from wishbone.error import InvalidModule
-from wishbone.module import ModuleType
 
 Greenlets = namedtuple('Greenlets', "consumer generic log metric")
 
@@ -61,9 +61,13 @@ class ActorConfig(object):
         lookup (dict): A dictionary of lookup methods.
         description (str): A short free form discription of the actor instance.
         functions (dict): A dict of queue names containing an array of functions
+        protocol_name (str): A protocol decode or encode component name.
+        protocol_function (func): The protocol function to apply
+        protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[], protocol=None):
+    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[],
+                 protocol_name=None, protocol_function=None, protocol_event=False):
 
         '''
         Args:
@@ -74,7 +78,9 @@ class ActorConfig(object):
             description (str): A short free form discription of the actor instance.
             functions (dict): A dict of queue names containing an array of functions.
             confirmation_modules (array): The name of the module instance responsible to confirm events
-            protcol (func): The decode function of a Wishbone protocol class
+            protocol_name (str): A protocol decode or encode component name.
+            protocol_function (func): The protocol function to apply
+            protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
         '''
         self.name = name
         self.size = size
@@ -83,7 +89,9 @@ class ActorConfig(object):
         self.description = description
         self.functions = functions
         self.confirmation_modules = confirmation_modules
-        self.protocol = protocol
+        self.protocol_name = protocol_name
+        self.protocol_function = protocol_function
+        self.protocol_event = protocol_event
 
 
 class Actor():
@@ -117,7 +125,6 @@ class Actor():
         self.__buildUplook()
 
         self.stopped = True
-        self.__validateProtocolSettings()
 
     def connect(self, source, destination_module, destination_queue):
         '''Connects the <source> queue to the <destination> queue.
@@ -209,6 +216,8 @@ class Actor():
 
     def start(self):
         '''Starts the module.'''
+
+        self.__validateProtocolMethod()
 
         if hasattr(self, "preHook"):
             self.logging.debug("preHook() found, executing")
@@ -348,6 +357,16 @@ class Actor():
                 if self.name in event.confirmation_modules:
                     event.confirm()
 
+    def __generateEventWithPayload(self, data):
+
+        return Wishbone_Event(data, confirmation_modules=self.config.confirmation_modules)
+
+    def __generateEvent(self, data):
+
+        e = Wishbone_Event(confirmation_modules=self.config.confirmation_modules)
+        e.slurp(data)
+        return e
+
     def __validateAppliedFunctions(self):
 
         '''
@@ -363,8 +382,7 @@ class Actor():
             if queue not in queues_w_registered_consumers:
                 raise ModuleInitFailure("Failed to initialize module '%s'. You have functions defined on queue '%s' which doesn't have a registered consumer." % (self.name, queue))
 
-
-    def __validateProtocolSettings(self):
+    def __validateProtocolMethod(self):
 
         '''Checks whether the module is of type input or output and whether it
         has a protocol encoder/decoder set.'''
@@ -373,13 +391,22 @@ class Actor():
             raise InvalidModule("Module instance '%s' seems to be of an incompatible old type." % (self.name))
 
         if self.MODULE_TYPE == ModuleType.INPUT:
-            if self.config.protocol is None:
-                self.logging.debug("Module of type <INPUT> with no decoder set.  Applying dummy decoder.")
+            if not hasattr(self, "decode") and self.config.protocol_name is None:
+                self.logging.debug("This 'Input' type module has no decoder method set. Setting dummy decoder.")
+                self.setDecoder("wishbone.protocol.decode.dummy")
+            if self.config.protocol_name is not None:
+                self.logging.debug("This 'Input' type module has no decoder method set. Setting the configured one.")
+                self.decode = self.config.protocol_function
+
+            if self.config.protocol_event is True:
+                self.generateEvent = self.__generateEvent
             else:
-                self.decode = self.config.protocol
+                self.generateEvent = self.__generateEventWithPayload
 
         if self.MODULE_TYPE == ModuleType.OUTPUT:
-            if self.config.protocol is None:
-                self.logging.debug("Module of type <OUTPUT> with no encoder set.  Applying dummy encoder.")
-            else:
-                self.encode = self.config.protocol
+            if not hasattr(self, "encode") and self.config.protocol_name is None:
+                self.logging.debug("This 'Input' type module has no encoder method set. Setting dummy encoder.")
+                self.setEncoder("wishbone.protocol.encode.dummy")
+            if self.config.protocol_name is not None:
+                self.logging.debug("This 'Input' type module has no encoder method set. Setting the configured one.")
+                self.encode = self.config.protocol_function

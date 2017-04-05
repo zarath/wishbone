@@ -103,5 +103,14 @@ class ModuleNotReady(Exception):
 class InvalidConfig(Exception):
     pass
 
+
 class InvalidEventFormat(Exception):
+    pass
+
+
+class BufferExceeded(Exception):
+    pass
+
+
+class ProtocolError(Exception):
     pass

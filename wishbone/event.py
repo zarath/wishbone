@@ -387,6 +387,7 @@ class Event(object):
         except AssertionError as err:
             raise InvalidEventFormat("The incoming data could not be used to construct an event.  Reason: '%s'." % err)
         else:
+            self.data = data
             self.data["@timestamp"] = time.time()
 
     raw = dump

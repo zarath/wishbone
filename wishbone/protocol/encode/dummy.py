@@ -30,5 +30,5 @@ class Dummy(Encode):
     def __init__(self, *args, **kwargs):
         pass
 
-    def encode(self, data):
+    def apply(self, data):
         return [data]

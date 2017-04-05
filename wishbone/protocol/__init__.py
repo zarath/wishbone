@@ -25,17 +25,14 @@
 from wishbone.error import InvalidEventFormat
 from wishbone.event import Event
 
+
 class Decode(object):
 
     def decode(self, data):
         pass
 
+
 class Encode(object):
 
     def encode(self, data):
         pass
-
-
-
-
-

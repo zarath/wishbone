@@ -22,19 +22,22 @@
 #
 #
 
+
 from wishbone.protocol import Decode
+from wishbone.error import ProtocolError
 from io import BytesIO
+from json import loads
 
 
 class EndOfStream(Exception):
     pass
 
 
-class Plain(Decode):
+class JSON(Decode):
 
-    '''**Decodes text.**
+    '''**Decodes JSON data.**
 
-    Converts bytestring into unicode using the defined charset.
+    Converts bytestring into a JSON string using the defined charset.
 
     Parameters:
 
@@ -72,14 +75,20 @@ class Plain(Decode):
                 raise Exception("Buffer exceeded")
             while self.delimiter in data:
                 item, data = data.split(self.delimiter, 1)
-                yield item
+                try:
+                    yield loads(item)
+                except Exception as err:
+                    raise ProtocolError("ProtcolError: %s" % (err))
             self.__leftover = data
 
     def __plainNoDelimiter(self, data):
 
         if data is None or data == b'':
             self.buffer.seek(0)
-            yield self.buffer.getvalue().decode(self.charset)
+            try:
+                yield loads(self.buffer.getvalue().decode(self.charset))
+            except Exception as err:
+                raise ProtocolError("ProtcolError: %s" % (err))
         else:
             self.__buffer_size += self.buffer.write(data)
             if self.__buffer_size > self.buffer_size:

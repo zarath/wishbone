@@ -26,7 +26,7 @@ import pkg_resources
 import re
 from prettytable import PrettyTable
 from wishbone.error import InvalidComponent, NoSuchComponent
-from wishbone import Actor
+from wishbone import actor
 from wishbone.lookup import Lookup
 
 
@@ -69,6 +69,7 @@ class ComponentManager():
     '''
 
     COMPONENT_TYPES = [
+        "protocol",
         "module",
         "function",
         "lookup"
@@ -76,12 +77,14 @@ class ComponentManager():
 
     def __init__(self,
                  namespace=["wishbone", "wishbone_contrib"],
+                 protocol_categories=["encode", "decode"],
                  module_categories=["flow", "input", "output", "process"],
-                 function_categories=["encode", "decode", "process"],
+                 function_categories=["process"],
                  lookup_categories=["internal", "external"]
                  ):
         self.namespace = namespace
-        self.component_types = ["module", "function", "lookup"]
+        self.component_types = ["protocol", "module", "function", "lookup"]
+        self.protocol_categories = protocol_categories
         self.module_categories = module_categories
         self.function_categories = function_categories
         self.lookup_categories = lookup_categories
@@ -130,7 +133,7 @@ class ComponentManager():
         if m is None:
             raise NoSuchComponent("Component %s.%s.%s.%s cannot be found." % (namespace, component_type, category, name))
         else:
-            if callable(m) or issubclass(m, Actor) or issubclass(m, Lookup):
+            if callable(m) or issubclass(m, actor.Actor) or issubclass(m, Lookup):
                 return m
             else:
                 raise InvalidComponent("'%s.%s.%s.%s' is not a valid wishbone component." % (namespace, component_type, category, name))
@@ -163,6 +166,10 @@ class ComponentManager():
         '''
 
         for namespace in self.namespace:
+            for category in sorted(self.protocol_categories):
+                prefix = "%s.protocol.%s" % (namespace, category)
+                for item in [m.name for m in pkg_resources.iter_entry_points(group=prefix)]:
+                    yield (namespace, "protocol", category, item)
             for category in sorted(self.function_categories):
                 prefix = "%s.function.%s" % (namespace, category)
                 for item in [m.name for m in pkg_resources.iter_entry_points(group=prefix)]:
