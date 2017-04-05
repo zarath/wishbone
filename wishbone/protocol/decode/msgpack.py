@@ -22,17 +22,20 @@
 #
 #
 
+
 from wishbone.protocol import Decode
+from wishbone.error import ProtocolError
 from io import BytesIO
+from msgpack import Unpacker
 
 
 class EndOfStream(Exception):
     pass
 
 
-class Plain(Decode):
+class MSGPack(Decode):
 
-    '''**Decodes text.**
+    '''**Decodes MSGPack format into .**
 
     Converts bytestring into unicode using the defined charset.
 
@@ -41,47 +44,31 @@ class Plain(Decode):
         - charset(string)("utf-8")
            |  The charset to use to decode the bytestring data.
 
-        - delimiter(string)("\n")
-           |  The delimiter between multiple events
-
         - buffer_size(int)(4096)
            |  The max amount of bytes allowed to read for 1 event
+
     '''
 
-    def __init__(self, charset="utf-8", delimiter="\n", buffer_size=4096):
+    def __init__(self, charset="utf-8", buffer_size=4096):
 
         self.charset = charset
-        self.delimiter = delimiter
         self.buffer_size = buffer_size
         self.__leftover = ""
         self.buffer = BytesIO()
         self.__buffer_size = 0
 
-        if delimiter is None:
-            self.apply = self.__plainNoDelimiter
-        else:
-            self.apply = self.__plainDelimiter
+        self.unpacker = Unpacker(buf)
 
-    def __plainDelimiter(self, data):
-
-        if data is None or data == b'':
-            yield []
-        else:
-            data = self.__leftover + data.decode(self.charset)
-            if len(data) > self.buffer_size:
-                raise Exception("Buffer exceeded")
-            while self.delimiter in data:
-                item, data = data.split(self.delimiter, 1)
-                yield item
-            self.__leftover = data
-
-    def __plainNoDelimiter(self, data):
+    def decode(self, data):
 
         if data is None or data == b'':
             self.buffer.seek(0)
-            yield self.buffer.getvalue().decode(self.charset)
+            try:
+                yield loads(self.buffer.getvalue().decode(self.charset))
+            except Exception as err:
+                raise ProtocolError("ProtcolError: %s" % (err))
         else:
             self.__buffer_size += self.buffer.write(data)
             if self.__buffer_size > self.buffer_size:
                 raise Exception("Buffer exceeded.")
-            yield []
+            return []

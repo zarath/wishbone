@@ -179,6 +179,11 @@ class Default(object):
     def __initConfig(self):
         '''Setup all modules and routes.'''
 
+        protocols = {}
+
+        for name, instance in list(self.config.protocols.items()):
+            protocols[name] = self.component_manager.getComponentByName(instance.protocol)(**instance.arguments).apply
+
         lookups = {}
         for name, instance in list(self.config.lookups.items()):
             lookups[name] = self.component_manager.getComponentByName(instance.lookup)(**instance.arguments).lookup
@@ -202,13 +207,20 @@ class Default(object):
             if instance.description == "":
                 instance.description = pmodule.__doc__.split("\n")[0].replace('*', '')
 
+            protocol_name = instance.get("protocol", None)
+            protocol_function = protocols.get(protocol_name, None)
+            protocol_event = self.config.protocols.get(protocol_name, {}).get("event", False)
+
             actor_config = ActorConfig(
                 name=name,
                 size=self.size,
                 frequency=self.frequency,
                 lookup=lookups,
                 description=instance.description,
-                functions=module_functions
+                functions=module_functions,
+                protocol_name=protocol_name,
+                protocol_function=protocol_function,
+                protocol_event=protocol_event
             )
 
             self.registerModule(pmodule, actor_config, instance.arguments)
@@ -223,28 +235,6 @@ class Default(object):
                 return False
         else:
             return True
-
-    # def __registerLookupModule(self, module, **kwargs):
-    #     '''Registers a lookupmodule
-
-    #     Args:
-    #         module (Looup): The lookup module (not initialized)
-    #         **kwargs (dict): The parameters used to initiolize the lookup module.
-
-    #     Raises:
-    #         FunctionInitFailure: An error occurred loading and initializing the module.
-
-    #     '''
-
-    #     for group in ["wishbone.lookup", "wishbone_contrib.lookup"]:
-    #         for entry_point in iter_entry_points(group=group, name=None):
-    #             if "%s.%s" % (group, entry_point.name) == module:
-    #                 l = entry_point.load()(**kwargs)
-    #                 if hasattr(l, "lookup"):
-    #                     return l.lookup
-    #                 else:
-    #                     raise FunctionInitFailure("Lookup module '%s' does not seem to have a 'lookup' method" % (l.module_name))
-    #     raise FunctionInitFailure("Lookup module '%s' does not exist." % (module))
 
     def __setupConnections(self):
         '''Setup all connections as defined by configuration_manager'''

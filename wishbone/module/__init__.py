@@ -23,8 +23,7 @@
 #
 
 from enum import Enum
-from wishbone.protocol.decode.dummy import Dummy as DummyDecoder
-from wishbone.protocol.encode.dummy import Dummy as DummyEncoder
+from wishbone.componentmanager import ComponentManager
 
 
 class ModuleType(Enum):
@@ -36,12 +35,18 @@ class ModuleType(Enum):
 
 class InputModule(object):
     MODULE_TYPE = ModuleType.INPUT
-    decode = DummyDecoder().decode
+
+    def setDecoder(self, name, *args, **kwargs):
+
+        self.decode = ComponentManager().getComponentByName(name)(*args, **kwargs).apply
 
 
 class OutputModule(object):
     MODULE_TYPE = ModuleType.OUTPUT
-    encode = DummyEncoder().encode
+
+    def setEncoder(self, name, *args, **kwargs):
+
+        self.encode = ComponentManager().getComponentByName(name)(*args, **kwargs).apply
 
 
 class FlowModule(object):

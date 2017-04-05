@@ -107,8 +107,12 @@ setup(
     entry_points={
         'console_scripts': ['wishbone = wishbone.bootstrap:main'],
         'wishbone.protocol.decode': [
-            'dummy = wishbone.protocol.decode.dummy.Dummy'
-            'plain = wishbone.protocol.decode.plain.Plain'
+            'dummy = wishbone.protocol.decode.dummy:Dummy',
+            'plain = wishbone.protocol.decode.plain:Plain',
+            'json = wishbone.protocol.decode.json:JSON',
+        ],
+        'wishbone.protocol.encode': [
+            'dummy = wishbone.protocol.encode.dummy:Dummy'
         ],
         'wishbone.module.flow': [
             'acknowledge = wishbone.module.acknowledge:Acknowledge',
