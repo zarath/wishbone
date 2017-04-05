@@ -44,7 +44,7 @@ class JSON(Decode):
         - charset(string)("utf-8")
            |  The charset to use to decode the bytestring data.
 
-        - delimiter(string)("\n")
+        - delimiter(string)("\\n")
            |  The delimiter between multiple events
 
         - buffer_size(int)(4096)
