@@ -110,6 +110,7 @@ setup(
             'dummy = wishbone.protocol.decode.dummy:Dummy',
             'plain = wishbone.protocol.decode.plain:Plain',
             'json = wishbone.protocol.decode.json:JSON',
+            'msgpack = wishbone.protocol.decode.msgpack:MSGPack',
         ],
         'wishbone.protocol.encode': [
             'dummy = wishbone.protocol.encode.dummy:Dummy'
