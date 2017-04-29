@@ -311,11 +311,11 @@ class Actor(object):
                 if self.name in event.confirmation_modules:
                     event.confirm()
 
-    def __generateEventWithPayload(self, data):
+    def __generateEventWithPayload(self, data={}):
 
         return Wishbone_Event(data, confirmation_modules=self.config.confirmation_modules)
 
-    def __generateEvent(self, data):
+    def __generateEvent(self, data={}):
 
         e = Wishbone_Event(confirmation_modules=self.config.confirmation_modules)
         e.slurp(data)
