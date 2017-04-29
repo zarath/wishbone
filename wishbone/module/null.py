@@ -22,7 +22,7 @@
 #
 #
 
-from wishbone import Actor
+from wishbone.actor import Actor
 from wishbone.module import OutputModule
 
 

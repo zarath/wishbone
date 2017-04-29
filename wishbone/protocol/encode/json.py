@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  json.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,3 +22,18 @@
 #
 #
 
+from wishbone.protocol import Encode
+from json import dumps
+
+
+class JSON(Encode):
+
+    def __init__(self, sort_keys=False, ensure_ascii=False, indent=None):
+        self.sort_keys = sort_keys
+        self.ensure_ascii = ensure_ascii
+        self.indent = indent
+
+    def handleDict(self, data):
+        return dumps(data, sort_keys=self.sort_keys, ensure_ascii=self.ensure_ascii, indent=self.indent)
+
+    handleList = handleDict

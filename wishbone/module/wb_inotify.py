@@ -22,8 +22,9 @@
 #
 #
 
-from wishbone import Actor
+from wishbone.actor import Actor
 from wishbone.module import InputModule
+from wishbone.protocol.decode.dummy import Dummy
 
 # I know no other working way to actually monkey patch select
 # when inotify is imported.
@@ -38,7 +39,6 @@ sys.modules["select"].epoll = sys.modules["select"].poll
 from inotify.adapters import Inotify
 from inotify import constants
 
-from wishbone.event import Event
 from gevent import sleep
 import os
 import fnmatch
@@ -107,6 +107,7 @@ class WBInotify(Actor, InputModule):
     def __init__(self, actor_config, initial_listing=True, glob_pattern="*", paths={"/tmp": ["IN_CREATE"]}):
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")
+        self.decode = Dummy().handler
 
     def preHook(self):
 
@@ -138,12 +139,15 @@ class WBInotify(Actor, InputModule):
 
                 if self.kwargs.initial_listing:
                     for p in self.__getAllFiles(path, glob_pattern):
-                        e = Event({"path": os.path.abspath(p), "inotify_type": "WISHBONE_INIT"}, confirmation_modules=self.config.confirmation_modules)
-                        self.pool.queue.outbox.put(e)
-                        e.getConfirmation()
+                        for payload in self.decode(p):
+                            e = self.generateEvent({"path": os.path.abspath(payload), "inotify_type": "WISHBONE_INIT"})
+                            self.pool.queue.outbox.put(e)
+                            e.getConfirmation()
                 try:
                     for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
-                        self.pool.queue.outbox.put(Event({"path": abs_path, "inotify_type": i_type}))
+                        for payload in self.decode(abs_path):
+                            event = self.generateEvent({"path": payload, "inotify_type": i_type})
+                            self.pool.queue.outbox.put(event)
                 except Exception as err:
                     self.logging.critical('Failed to initialize inotify monitor. This needs immediate attention. Reason: %s' % err)
                     sleep(1)

@@ -22,7 +22,7 @@
 #
 #
 
-from wishbone import Actor
+from wishbone.actor import Actor
 from wishbone.module import OutputModule
 from wishbone.event import Log
 from wishbone.event import Bulk

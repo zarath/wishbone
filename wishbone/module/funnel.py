@@ -22,11 +22,10 @@
 #
 #
 
-from wishbone import Actor
 from wishbone.module import FlowModule
 
 
-class Funnel(Actor, FlowModule):
+class Funnel(FlowModule):
 
     '''**Funnel multiple incoming queues to 1 outgoing queue.**
 
@@ -45,7 +44,7 @@ class Funnel(Actor, FlowModule):
 
     def __init__(self, actor_config):
 
-        Actor.__init__(self, actor_config)
+        FlowModule.__init__(self, actor_config)
         self.pool.createQueue("outbox")
 
     def preHook(self):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  msgpack.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,3 +22,17 @@
 #
 #
 
+from wishbone.protocol import Encode
+from msgpack import dumps
+
+
+class MSGPack(Encode):
+
+    def __init__(self):
+        pass
+
+    def handleDict(self, data):
+        return dumps(data)
+
+    def handleList(self, data):
+        return dumps(data)

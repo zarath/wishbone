@@ -29,7 +29,8 @@ from wishbone.event import Metric
 from wishbone.event import Bulk
 from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule
 from wishbone.lookup import EventLookup
-from wishbone.module import ModuleType
+from wishbone.moduletype import ModuleType
+from wishbone.actorconfig import ActorConfig
 
 from uplook.errors import NoSuchValue
 from collections import namedtuple
@@ -46,55 +47,7 @@ import inspect
 Greenlets = namedtuple('Greenlets', "consumer generic log metric")
 
 
-class ActorConfig(object):
-
-    '''
-    A configuration object pass to a Wishbone actor.
-
-    This is a simple object which holds a set of attributes (with some sane
-    defaults) a Wishbone Actor expects.
-
-    Attributes:
-        name (str): The name identifying the actor instance.
-        size (int): The size of the Actor instance's queues.
-        frequency (int): The time in seconds to generate metrics.
-        lookup (dict): A dictionary of lookup methods.
-        description (str): A short free form discription of the actor instance.
-        functions (dict): A dict of queue names containing an array of functions
-        protocol_name (str): A protocol decode or encode component name.
-        protocol_function (func): The protocol function to apply
-        protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
-    '''
-
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[],
-                 protocol_name=None, protocol_function=None, protocol_event=False):
-
-        '''
-        Args:
-            name (str): The name identifying the actor instance.
-            size (int): The size of the Actor instance's queues.
-            frequency (int): The time in seconds to generate metrics.
-            lookup (dict): A dictionary of lookup methods.
-            description (str): A short free form discription of the actor instance.
-            functions (dict): A dict of queue names containing an array of functions.
-            confirmation_modules (array): The name of the module instance responsible to confirm events
-            protocol_name (str): A protocol decode or encode component name.
-            protocol_function (func): The protocol function to apply
-            protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
-        '''
-        self.name = name
-        self.size = size
-        self.frequency = frequency
-        self.lookup = lookup
-        self.description = description
-        self.functions = functions
-        self.confirmation_modules = confirmation_modules
-        self.protocol_name = protocol_name
-        self.protocol_function = protocol_function
-        self.protocol_event = protocol_event
-
-
-class Actor():
+class Actor(object):
 
     def __init__(self, config):
 
@@ -217,7 +170,7 @@ class Actor():
     def start(self):
         '''Starts the module.'''
 
-        self.__validateProtocolMethod()
+        self.__setProtocolMethod()
 
         if hasattr(self, "preHook"):
             self.logging.debug("preHook() found, executing")
@@ -246,6 +199,7 @@ class Actor():
                     # obey that.
                     break
                 except Exception as err:
+                    raise
                     self.logging.error("Backgrounded function '%s' of module instance '%s' caused an error. This needs attention. Restarting it in 2 seconds. Reason: %s" % (
                         function.__name__,
                         self.name,
@@ -382,7 +336,7 @@ class Actor():
             if queue not in queues_w_registered_consumers:
                 raise ModuleInitFailure("Failed to initialize module '%s'. You have functions defined on queue '%s' which doesn't have a registered consumer." % (self.name, queue))
 
-    def __validateProtocolMethod(self):
+    def __setProtocolMethod(self):
 
         '''Checks whether the module is of type input or output and whether it
         has a protocol encoder/decoder set.'''
@@ -405,8 +359,9 @@ class Actor():
 
         if self.MODULE_TYPE == ModuleType.OUTPUT:
             if not hasattr(self, "encode") and self.config.protocol_name is None:
-                self.logging.debug("This 'Input' type module has no encoder method set. Setting dummy encoder.")
+                self.logging.debug("This 'Output' type module has no encoder method set. Setting dummy encoder.")
                 self.setEncoder("wishbone.protocol.encode.dummy")
             if self.config.protocol_name is not None:
-                self.logging.debug("This 'Input' type module has no encoder method set. Setting the configured one.")
+                self.logging.debug("This 'Output' type module has no encoder method set. Setting the configured one.")
                 self.encode = self.config.protocol_function
+

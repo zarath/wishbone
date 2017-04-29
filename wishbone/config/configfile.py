@@ -141,6 +141,9 @@ class ConfigFile(object):
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
 
+        if protocol is not None and protocol not in self.config.protocols:
+            raise Exception("No protocol module defined with name '%s'" % (protocol))
+
         if name not in self.config["modules"]:
             self.config["modules"][name] = AttrDict({
                 'description': description,

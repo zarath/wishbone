@@ -22,17 +22,85 @@
 #
 #
 
-from wishbone.error import InvalidEventFormat
+from wishbone.error import ProtocolError
 from wishbone.event import Event
-
 
 class Decode(object):
 
-    def decode(self, data):
-        pass
+    def handler(self, data):
 
+        if isinstance(data, bytes) or data is None:
+            return self.handleBytes(data)
+        elif isinstance(data, str) or data is None:
+            return self.handleString(data)
+        elif isinstance(data, int) or data is None:
+            return self.handleInt(data)
+        elif isinstance(data, float) or data is None:
+            return self.handleFloat(data)
+        elif isinstance(data, dict) or data is None:
+            return self.handleDict(data)
+        elif isinstance(data, list) or data is None:
+            return self.handleList(data)
+        else:
+            raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleBytes(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleString(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleInt(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleFloat(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleUnicode(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleDict(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleList(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
 
 class Encode(object):
 
-    def encode(self, data):
-        pass
+    def handler(self, data):
+
+        if isinstance(data, bytes) or data is None:
+            return self.handleBytes(data)
+        elif isinstance(data, str) or data is None:
+            return self.handleString(data)
+        elif isinstance(data, int) or data is None:
+            return self.handleInt(data)
+        elif isinstance(data, float) or data is None:
+            return self.handleFloat(data)
+        elif isinstance(data, dict) or data is None:
+            return self.handleDict(data)
+        elif isinstance(data, list) or data is None:
+            return self.handleList(data)
+        else:
+            raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleBytes(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleString(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleInt(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleFloat(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleUnicode(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleDict(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))
+
+    def handleList(self, data):
+        raise ProtocolError("%s is not supported by this Encoder." % (type(data)))

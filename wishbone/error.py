@@ -114,3 +114,7 @@ class BufferExceeded(Exception):
 
 class ProtocolError(Exception):
     pass
+
+
+class ProtocolInitFailure(Exception):
+    pass

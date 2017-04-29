@@ -23,7 +23,7 @@
 #
 #
 
-from wishbone import Actor
+from wishbone.actor import Actor
 from wishbone.module import FlowModule
 from itertools import cycle
 from random import randint

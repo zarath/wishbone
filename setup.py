@@ -41,7 +41,7 @@ install_requires = [
     'prettytable',
     'python-daemon-3K',
     'requests',
-    'uplook==1.1.0',
+    'uplook==1.1.1',
     'pyyaml',
     'jsonschema',
     'msgpack-python'
@@ -113,7 +113,9 @@ setup(
             'msgpack = wishbone.protocol.decode.msgpack:MSGPack',
         ],
         'wishbone.protocol.encode': [
-            'dummy = wishbone.protocol.encode.dummy:Dummy'
+            'dummy = wishbone.protocol.encode.dummy:Dummy',
+            'json = wishbone.protocol.encode.json:JSON',
+            'msgpack = wishbone.protocol.encode.msgpack:MSGPack',
         ],
         'wishbone.module.flow': [
             'acknowledge = wishbone.module.acknowledge:Acknowledge',

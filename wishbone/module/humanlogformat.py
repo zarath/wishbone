@@ -24,7 +24,6 @@
 #
 
 
-from wishbone import Actor
 from wishbone.module import ProcessModule
 from wishbone.event import Log
 from time import strftime, localtime
@@ -32,7 +31,7 @@ import os
 import sys
 
 
-class HumanLogFormat(Actor, ProcessModule):
+class HumanLogFormat(ProcessModule):
 
     '''**Converts the internal log format into human readable form.**
 
@@ -67,7 +66,7 @@ class HumanLogFormat(Actor, ProcessModule):
     '''
 
     def __init__(self, actor_config, colorize=True, ident=None):
-        Actor.__init__(self, actor_config)
+        ProcessModule.__init__(self, actor_config)
 
         self.levels = {
             0: "emergency",

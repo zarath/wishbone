@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  moduletype.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -21,4 +21,11 @@
 #  MA 02110-1301, USA.
 #
 #
+from enum import Enum
 
+
+class ModuleType(Enum):
+    INPUT = 1
+    OUTPUT = 2
+    FLOW = 3
+    PROCESS = 4

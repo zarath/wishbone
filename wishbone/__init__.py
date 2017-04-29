@@ -22,9 +22,9 @@
 #
 #
 
-from wishbone.actor import Actor
-from wishbone.queue import Queue
-from wishbone.queue import QueuePool
-from wishbone.logging import Logging
-from wishbone.componentmanager import ComponentManager
-from wishbone.event import Event
+#from wishbone.actor import Actor
+# from wishbone.queue import Queue
+# from wishbone.queue import QueuePool
+# from wishbone.logging import Logging
+# from wishbone.componentmanager import ComponentManager
+# from wishbone.event import Event

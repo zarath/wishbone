@@ -22,9 +22,9 @@
 #
 #
 
-from wishbone.actor import ActorConfig
-from wishbone.error import ModuleInitFailure, NoSuchModule
-from wishbone import ComponentManager
+from wishbone.actorconfig import ActorConfig
+from wishbone.error import ModuleInitFailure, NoSuchModule, ProtocolInitFailure
+from wishbone.componentmanager import ComponentManager
 from gevent import event, sleep, spawn
 from gevent import pywsgi
 import json
@@ -182,7 +182,10 @@ class Default(object):
         protocols = {}
 
         for name, instance in list(self.config.protocols.items()):
-            protocols[name] = self.component_manager.getComponentByName(instance.protocol)(**instance.arguments).apply
+            try:
+                protocols[name] = self.component_manager.getComponentByName(instance.protocol)(**instance.arguments).handler
+            except Exception as err:
+                raise ProtocolInitFailure("Could not initialize Protocol module '%s'. Reason: %s" % (name, err))
 
         lookups = {}
         for name, instance in list(self.config.lookups.items()):

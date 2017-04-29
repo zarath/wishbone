@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  test_protocol_decode_plain.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,3 +22,13 @@
 #
 #
 
+
+from wishbone.protocol.decode.plain import Plain
+import itertools
+
+def test_protocol_decode_plain_basic():
+
+    a = itertools.cycle(["a", "b", "c"])
+    p = Plain()
+    for payload in p.handler(b"a\nb\nc\n"):
+        assert payload == next(a)

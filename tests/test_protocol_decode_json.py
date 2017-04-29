@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  test_protocol_decode_json.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,3 +22,19 @@
 #
 #
 
+
+from wishbone.protocol.decode.msgpack import MSGPack
+
+
+def test_protocol_decode_msgpack_basic():
+
+    m = MSGPack()
+    for item in m.handler(b'\x93\x01\x02\x03'):
+        assert item == [1, 2, 3]
+
+def test_protocol_decode_msgpack_unicode():
+
+    m = MSGPack()
+    for item in m.handler(b'\x93\xce\xb1'):
+        assert item == [u"α"]
+        assert isinstance(item[0], unicode)

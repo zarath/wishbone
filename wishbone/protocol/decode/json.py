@@ -61,14 +61,14 @@ class JSON(Decode):
         self.__buffer_size = 0
 
         if delimiter is None:
-            self.apply = self.__plainNoDelimiter
+            self.handleBytes = self.__plainNoDelimiter
         else:
-            self.apply = self.__plainDelimiter
+            self.handleBytes = self.__plainDelimiter
 
     def __plainDelimiter(self, data):
 
         if data is None or data == b'':
-            yield []
+            return []
         else:
             data = self.__leftover + data.decode(self.charset)
             if len(data) > self.buffer_size:
@@ -93,4 +93,11 @@ class JSON(Decode):
             self.__buffer_size += self.buffer.write(data)
             if self.__buffer_size > self.buffer_size:
                 raise Exception("Buffer exceeded.")
-            yield []
+            return []
+
+    def handleString(self, data):
+
+        try:
+            yield loads(data)
+        except Exception as err:
+            raise ProtocolError("ProtocolError: %s" % (err))
