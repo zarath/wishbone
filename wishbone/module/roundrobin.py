@@ -29,7 +29,7 @@ from itertools import cycle
 from random import randint
 
 
-class RoundRobin(Actor, FlowModule):
+class RoundRobin(FlowModule):
 
     '''**Round-robins incoming events to all connected queues.**
 

@@ -30,7 +30,7 @@ from gevent.os import make_nonblocking
 import arrow
 
 
-class FileOut(Actor, OutputModule):
+class FileOut(OutputModule):
 
     '''**Writes events to a file**
 

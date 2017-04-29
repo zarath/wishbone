@@ -31,7 +31,7 @@ from gevent import sleep
 import time
 
 
-class Cron(Actor, InputModule):
+class Cron(InputModule):
 
     '''**Generates an event at the defined time**
 
@@ -72,7 +72,7 @@ class Cron(Actor, InputModule):
             if self.cron.check_trigger(time.localtime(time.time())[:5]):
                 self.logging.info("Cron executed.")
                 for payload in self.decode(self.kwargs.payload):
-                    e = self.generateEvent()
+                    e = self.generateEvent({})
                     e.set(payload, self.kwargs.field)
                     self.submit(e, self.pool.queue.outbox)
                     e.getConfirmation()

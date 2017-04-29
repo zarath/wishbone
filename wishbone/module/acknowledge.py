@@ -56,7 +56,7 @@ class AckList(object):
                 return True
 
 
-class Acknowledge(Actor, FlowModule):
+class Acknowledge(FlowModule):
 
     '''**Lets events pass or not based on some event value present or not in a lookup table.**
 
