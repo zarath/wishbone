@@ -22,36 +22,31 @@
 #
 #
 
-from enum import Enum
+
+from wishbone.actor import Actor
+from wishbone.moduletype import ModuleType
 from wishbone.componentmanager import ComponentManager
 
 
-class ModuleType(Enum):
-    INPUT = 1
-    OUTPUT = 2
-    FLOW = 3
-    PROCESS = 4
-
-
-class InputModule(object):
+class InputModule(Actor):
     MODULE_TYPE = ModuleType.INPUT
 
     def setDecoder(self, name, *args, **kwargs):
 
-        self.decode = ComponentManager().getComponentByName(name)(*args, **kwargs).apply
+        self.decode = ComponentManager().getComponentByName(name)(*args, **kwargs).handler
 
 
-class OutputModule(object):
+class OutputModule(Actor):
     MODULE_TYPE = ModuleType.OUTPUT
 
     def setEncoder(self, name, *args, **kwargs):
 
-        self.encode = ComponentManager().getComponentByName(name)(*args, **kwargs).apply
+        self.encode = ComponentManager().getComponentByName(name)(*args, **kwargs).handler
 
 
-class FlowModule(object):
+class FlowModule(Actor):
     MODULE_TYPE = ModuleType.FLOW
 
 
-class ProcessModule(object):
+class ProcessModule(Actor):
     MODULE_TYPE = ModuleType.PROCESS

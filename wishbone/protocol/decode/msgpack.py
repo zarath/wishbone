@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  plain.py
+#  msgpack.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -24,7 +24,6 @@
 
 
 from wishbone.protocol import Decode
-from wishbone.error import ProtocolError
 from io import BytesIO
 from msgpack import Unpacker
 from msgpack.exceptions import BufferFull
@@ -38,7 +37,7 @@ class MSGPack(Decode):
 
     '''**Decodes MSGPack format into .**
 
-    Converts bytestring into unicode using the defined charset.
+    Converts incoming data into unicode using the defined charset.
 
     Parameters:
 
@@ -59,11 +58,14 @@ class MSGPack(Decode):
         self.__buffer_size = 0
         self.unpacker = Unpacker(encoding=self.charset, max_buffer_size=buffer_size)
 
-    def apply(self, data):
+    def handleBytes(self, data):
 
         try:
             self.unpacker.feed(data)
             for value in self.unpacker:
-                yield value
+                if value:
+                    yield value
+                else:
+                    return []
         except BufferFull:
             raise Exception("Buffer of %s bytes full." % (self.buffer_size))

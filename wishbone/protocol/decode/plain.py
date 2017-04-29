@@ -58,9 +58,9 @@ class Plain(Decode):
         self.__buffer_size = 0
 
         if delimiter is None:
-            self.apply = self.__plainNoDelimiter
+            self.handleBytes = self.__plainNoDelimiter
         else:
-            self.apply = self.__plainDelimiter
+            self.handleBytes = self.__plainDelimiter
 
     def __plainDelimiter(self, data):
 

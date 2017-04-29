@@ -1,7 +1,7 @@
 Wishbone changelog
 ==================
 
-Versoin 2.3.2
+Version 2.4.0
 ~~~~~~~~~~~~~
 Features:
 - Reorganized module, function and lookup components and name space.
@@ -15,6 +15,8 @@ Features:
   processed the event (confirmation_modules).
 - Added support for module functions.
 - Removed wishbone.encode and decode modules and replace by equivalent functions.
+- Reworked wishbone.module.input.testevent
+- Reworked encode/decode handling.
 
 Bugfixes:
 

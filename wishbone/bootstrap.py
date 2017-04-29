@@ -29,7 +29,7 @@ import sys
 # http://stackoverflow.com/questions/4554271/how-to-avoid-excessive-stat-etc-localtime-calls-in-strftime-on-linux
 os.environ["TZ"] = ":/etc/localtime"
 
-from wishbone.router import Default
+from wishbone.router.default import Default
 from wishbone.componentmanager import ComponentManager
 from wishbone.config import ConfigFile
 from wishbone.utils import PIDFile
@@ -309,6 +309,7 @@ def main():
     try:
         BootStrap()
     except Exception as err:
+        raise
         print(("Failed to bootstrap instance.  Reason: %s" % (err)))
 
 

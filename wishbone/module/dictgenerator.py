@@ -24,10 +24,10 @@
 from sys import version_info
 from random import choice, randint
 from gevent import sleep
-from wishbone import Actor
+from wishbone.actor import Actor
 from wishbone.module import InputModule
-from wishbone.event import Event
 import os
+from wishbone.protocol.decode.dummy import Dummy
 
 
 if version_info[0] == 2:
@@ -90,6 +90,7 @@ class DictGenerator(Actor, InputModule):
             self.generateValue = self.pickWord
 
         self.pool.createQueue("outbox")
+        self.decode = Dummy().handler
 
     def readWordlist(self):
         with open("%s/../data/wordlist.txt" % (os.path.dirname(__file__)), encoding="latin-1") as f:
@@ -107,12 +108,12 @@ class DictGenerator(Actor, InputModule):
     def generateDicts(self):
 
         while self.loop():
-            d = self.getDict()
-            event = Event(d, self.config.confirmation_modules)
-            self.submit(event, self.pool.queue.outbox)
-            self.key_number = +1
-            sleep(self.kwargs.interval)
-            event.getConfirmation()
+            for payload in self.decode(self.getDict()):
+                event = self.generateEvent()
+                self.submit(event, self.pool.queue.outbox)
+                self.key_number = +1
+                sleep(self.kwargs.interval)
+                event.getConfirmation()
 
     def getDictPredefinedKeys(self):
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  test_actor.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,3 +22,28 @@
 #
 #
 
+from wishbone.actorconfig import ActorConfig
+from wishbone.module import InputModule
+from wishbone.protocol.decode.dummy import Dummy
+
+
+class DummyModule(InputModule):
+
+    def __init__(self, actor_config):
+        InputModule.__init__(self, actor_config)
+        self.pool.createQueue("outbox")
+        self.sendToBackground(self.producer)
+
+    def producer(self):
+
+        while self.loop():
+            e = self.generateEvent("hello")
+            self.submitEvent(e, "outbox")
+
+
+def test_module():
+
+    actor_config = ActorConfig('DummyTest', 100, 1, {}, "")
+    d = DummyModule(actor_config)
+    d.start()
+    assert d.decode.__self__.__class__.__name__ == "Dummy"

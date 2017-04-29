@@ -25,10 +25,10 @@
 from wishbone.protocol import Decode
 
 
-class Dummy(Decode, object):
+class Dummy(Decode):
 
     def __init__(self, *args, **kwargs):
         pass
 
-    def apply(self, data):
-        return [data]
+    def handler(self, data):
+        yield data

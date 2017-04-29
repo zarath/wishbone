@@ -22,9 +22,10 @@
 #
 #
 
-from wishbone import Actor
+from gevent import monkey; monkey.patch_all()
+from wishbone.actor import Actor
 from wishbone.module import InputModule
-from wishbone.event import Event
+from wishbone.protocol.decode.dummy import Dummy
 from cronex import CronExpression
 from gevent import sleep
 import time
@@ -61,6 +62,7 @@ class Cron(Actor, InputModule):
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")
         self.cron = CronExpression("%s wishbone" % self.kwargs.cron)
+        self.decode = Dummy().handler
 
     def preHook(self):
         self.sendToBackground(self.timer)
@@ -69,8 +71,8 @@ class Cron(Actor, InputModule):
         while self.loop():
             if self.cron.check_trigger(time.localtime(time.time())[:5]):
                 self.logging.info("Cron executed.")
-                e = Event(confirmation_modules=self.config.confirmation_modules)
                 for payload in self.decode(self.kwargs.payload):
+                    e = self.generateEvent()
                     e.set(payload, self.kwargs.field)
                     self.submit(e, self.pool.queue.outbox)
                     e.getConfirmation()

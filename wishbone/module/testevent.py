@@ -22,13 +22,12 @@
 #
 #
 
-from wishbone import Actor
 from wishbone.module import InputModule
-from wishbone.event import Event
+from wishbone.protocol.decode.dummy import Dummy
 from gevent import sleep
 
 
-class TestEvent(Actor, InputModule):
+class TestEvent(InputModule):
 
     '''**Generates a test event at the chosen interval.**
 
@@ -41,15 +40,11 @@ class TestEvent(Actor, InputModule):
            |  The interval in seconds between each generated event.
            |  A value of 0 means as fast as possible.
 
-        - message(string)("test")
+        - payload(str/dict/int/float)("test")
            |  The content of the test message.
 
-        - numbered(bool)
-           |  When true, appends a sequential number to the end.
-
-        - additional_values(dict)({})
-           |  A dictionary of key/value to add to the event.
-
+        - destination(str)("@data")
+           |  The location write the payload to
 
     Queues:
 
@@ -57,47 +52,22 @@ class TestEvent(Actor, InputModule):
            |  Contains the generated events.
     '''
 
-    def __init__(self, actor_config, interval=1, message="test", numbered=False, additional_values={}):
-        Actor.__init__(self, actor_config)
+    def __init__(self, actor_config, interval=1, payload="test", destination="@data"):
+        InputModule.__init__(self, actor_config)
         self.pool.createQueue("outbox")
+        self.decode = Dummy().handler
 
     def preHook(self):
-
-        if self.kwargs.interval == 0:
-            self.sleep = self.__doNoSleep
-        else:
-            self.sleep = self.__doSleep
-
-        if self.kwargs.numbered:
-            self.generateMessage = self.__doNumber
-            self.n = 0
-        else:
-            self.generateMessage = self.__doNoNumber
 
         self.sendToBackground(self.produce)
 
     def produce(self):
 
         while self.loop():
-            message = self.generateMessage(self.kwargs.message)
-            event = Event(message, confirmation_modules=self.config.confirmation_modules)
-            for key, value in list(self.kwargs.additional_values.items()):
-                event.set(value, key)
-            self.submit(event, self.pool.queue.outbox)
-            event.getConfirmation()
-            self.sleep()
-
+            for payload in self.decode(self.kwargs.payload):
+                event = self.generateEvent(payload)
+                event.set(payload, self.kwargs.destination)
+                self.submit(event, self.pool.queue.outbox)
+                event.getConfirmation()
+                sleep(self.kwargs.interval)
         self.logging.info("Stopped producing events.")
-
-    def __doSleep(self):
-        sleep(self.kwargs.interval)
-
-    def __doNoSleep(self):
-        pass
-
-    def __doNumber(self, data):
-        self.n += 1
-        return "%s %s" % (self.n, data)
-
-    def __doNoNumber(self, data):
-        return data

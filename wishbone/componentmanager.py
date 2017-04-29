@@ -26,8 +26,8 @@ import pkg_resources
 import re
 from prettytable import PrettyTable
 from wishbone.error import InvalidComponent, NoSuchComponent
-from wishbone import actor
 from wishbone.lookup import Lookup
+from wishbone.actor import Actor
 
 
 class ComponentManager():
@@ -133,7 +133,7 @@ class ComponentManager():
         if m is None:
             raise NoSuchComponent("Component %s.%s.%s.%s cannot be found." % (namespace, component_type, category, name))
         else:
-            if callable(m) or issubclass(m, actor.Actor) or issubclass(m, Lookup):
+            if callable(m) or issubclass(m, Actor) or issubclass(m, Lookup):
                 return m
             else:
                 raise InvalidComponent("'%s.%s.%s.%s' is not a valid wishbone component." % (namespace, component_type, category, name))
