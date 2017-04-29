@@ -80,7 +80,7 @@ class Bucket(object):
         self._timer = self.age
 
 
-class TippingBucket(Actor, FlowModule):
+class TippingBucket(FlowModule):
 
     '''**Aggregates multiple events into bulk.**
 

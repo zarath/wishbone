@@ -44,7 +44,7 @@ import os
 import fnmatch
 
 
-class WBInotify(Actor, InputModule):
+class WBInotify(InputModule):
 
     '''**Monitors one or more paths for inotify events.**
 

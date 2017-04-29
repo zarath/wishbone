@@ -34,7 +34,7 @@ if version_info[0] == 2:
     from io import open
 
 
-class DictGenerator(Actor, InputModule):
+class DictGenerator(InputModule):
 
     '''**Generates random dictionaries.**
 
@@ -109,7 +109,7 @@ class DictGenerator(Actor, InputModule):
 
         while self.loop():
             for payload in self.decode(self.getDict()):
-                event = self.generateEvent()
+                event = self.generateEvent(payload)
                 self.submit(event, self.pool.queue.outbox)
                 self.key_number = +1
                 sleep(self.kwargs.interval)

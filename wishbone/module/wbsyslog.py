@@ -31,7 +31,7 @@ import sys
 import os
 
 
-class Syslog(Actor, OutputModule):
+class Syslog(OutputModule):
 
     '''**Writes log events to syslog.**
 

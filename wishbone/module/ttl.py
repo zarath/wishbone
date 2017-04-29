@@ -26,7 +26,7 @@ from wishbone.actor import Actor
 from wishbone.module import FlowModule
 
 
-class TTL(Actor, FlowModule):
+class TTL(FlowModule):
 
     '''**Allows messages to pass a maximum number of times.**
 

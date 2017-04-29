@@ -28,7 +28,7 @@ from gevent import sleep
 from wishbone.event import Event
 
 
-class Fresh(Actor, FlowModule):
+class Fresh(FlowModule):
 
     '''**Generates a new event unless an event came through in the last x time.**
 

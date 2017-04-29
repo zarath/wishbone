@@ -44,7 +44,7 @@ VALID_EXPRESSIONS = ["add_item",
                      ]
 
 
-class Modify(Actor, ProcessModule):
+class Modify(ProcessModule):
 
     '''**Modify and manipulate datastructures.**
 
