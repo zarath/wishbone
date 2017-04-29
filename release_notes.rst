@@ -1,7 +1,7 @@
 Wishbone changelog
 ==================
 
-Version 2.4.0
+Version 3.0.0
 ~~~~~~~~~~~~~
 Features:
 - Reorganized module, function and lookup components and name space.
@@ -17,6 +17,7 @@ Features:
 - Removed wishbone.encode and decode modules and replace by equivalent functions.
 - Reworked wishbone.module.input.testevent
 - Reworked encode/decode handling.
+- Added support for Event.format
 
 Bugfixes:
 
