@@ -18,6 +18,7 @@ Features:
 - Reworked wishbone.module.input.testevent
 - Reworked encode/decode handling.
 - Added support for Event.format
+- Wishbone logs are now simple dicts
 
 Bugfixes:
 

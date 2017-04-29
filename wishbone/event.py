@@ -96,29 +96,6 @@ class Bulk(object):
         return len(self.__events)
 
 
-class Log(object):
-
-    '''
-    A Wishbone log object
-    '''
-
-    def __init__(self, time, level, pid, module, message):
-
-        self.time = time
-        self.level = level
-        self.pid = pid
-        self.module = module
-        self.message = message
-
-    def __str__(self):
-
-        return "Log(%s)" % (self.__dict__)
-
-    def __repr__(self):
-
-        return "Log(%s)" % (self.__dict__)
-
-
 class Metric(object):
 
     '''

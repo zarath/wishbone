@@ -25,7 +25,6 @@
 
 
 from wishbone.module import ProcessModule
-from wishbone.event import Log
 from time import strftime, localtime
 import os
 import sys
@@ -104,14 +103,15 @@ class HumanLogFormat(ProcessModule):
     def consume(self, event):
 
         data = event.get('@data')
-        if isinstance(data, Log):
+
+        if all([True if item in data.keys() else False for item in ["time", "pid", "level", "module", "message"]]):
             log = ("%s %s %s %s: %s" % (
-                strftime("%Y-%m-%dT%H:%M:%S", localtime(data.time)),
-                "%s[%s]:" % (self.kwargs.ident, data.pid),
-                self.levels[data.level],
-                data.module,
-                data.message))
-            event.set(self.colorize(log, data.level))
+                strftime("%Y-%m-%dT%H:%M:%S", localtime(data["time"])),
+                "%s[%s]:" % (self.kwargs.ident, data["pid"]),
+                self.levels[data["level"]],
+                data["module"],
+                data["message"]))
+            event.set(self.colorize(log, data["level"]))
             self.submit(event, self.pool.queue.outbox)
         else:
             raise Exception("Incoming data needs to be of type <wishbone.event.Log>. Dropped event.")

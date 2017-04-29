@@ -24,7 +24,7 @@
 #
 
 
-from wishbone.event import Event, Log
+from wishbone.event import Event
 from wishbone.error import QueueFull
 from time import time
 from os import getpid
@@ -65,7 +65,7 @@ class Logging():
 
     def __log(self, level, message):
 
-        event = Event(Log(time(), level, getpid(), self.name, message))
+        event = Event({"time": time(), "level": level, "pid": getpid(), "module": self.name, "message": message})
         try:
             self.logs.put(event)
         except QueueFull:

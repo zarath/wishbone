@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  test_module_humanlogformat.py
+#  test_wishbone.py
 #
-#  Copyright 2017 Jelle Smet <development@smetj.net>
+#  Copyright 2016 Jelle Smet <development@smetj.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,22 +23,23 @@
 #
 
 from wishbone.event import Event
-from wishbone.module.humanlogformat import HumanLogFormat
+# We need to import as otherwise TestEvent is treated as test code
+from wishbone.module.testevent import TestEvent as XTestEvent
 from wishbone.actor import ActorConfig
 from wishbone.utils.test import getter
+from gevent import sleep
 
+def test_module_logs():
 
-def test_module_humanlogformat():
+    actor_config = ActorConfig('testevent', 100, 1, {}, "")
 
-    actor_config = ActorConfig('humanlogformat', 100, 1, {}, "")
-    humanlogformat = HumanLogFormat(actor_config, colorize=False, ident='setup.py')
-    humanlogformat.pool.queue.inbox.disableFallThrough()
-    humanlogformat.pool.queue.outbox.disableFallThrough()
-    humanlogformat.start()
+    # {"time": time(), "level": level, "pid": getpid(), "module": self.name, "message": message}
+    test_event = XTestEvent(actor_config)
+    test_event.pool.queue.logs.disableFallThrough()
+    test_event.start()
 
-    e = Event('test')
-    e.set({"time": 1367682301.430527, "level": 6, "pid": 3342, "module": 'Router', "message": 'Received SIGINT. Shutting down.'})
+    log = getter(test_event.pool.queue.logs).get()
+    for key in ["time", "level", "pid", "module", "message"]:
+        assert key in log
+    test_event.stop()
 
-    humanlogformat.pool.queue.inbox.put(e)
-    one = getter(humanlogformat.pool.queue.outbox)
-    assert one.get() == "2013-05-04T17:45:01 setup.py[3342]: informational Router: Received SIGINT. Shutting down."

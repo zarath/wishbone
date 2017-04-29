@@ -24,7 +24,6 @@
 
 from wishbone.actor import Actor
 from wishbone.module import OutputModule
-from wishbone.event import Log
 from wishbone.event import Bulk
 import syslog
 import sys
@@ -43,16 +42,19 @@ class Syslog(OutputModule):
 
     Parameters:
 
-        - selection(str)("@data")
-           |  The part of the event to submit externally.
-           |  Use an empty string to refer to the complete event.
-
         - level(int)(5)*
            |  The loglevel.
+           |  (Can be a dynamic value)
 
         - ident(str)(<script_name>)*
            |  The syslog id string.
            |  If not provided the script name is used.
+           |  (Can be a dynamic value)
+
+        - message(str)("{@data[message]}")*
+           |  The syslog id string.
+           |  If not provided the script name is used.
+           |  (Can be a dynamic value)
 
     Queues:
 
@@ -60,7 +62,7 @@ class Syslog(OutputModule):
            |  incoming events
     '''
 
-    def __init__(self, actor_config, selection="@data", level=5, ident=os.path.basename(sys.argv[0])):
+    def __init__(self, actor_config, level=5, ident=os.path.basename(sys.argv[0]), message="{@data[message]}"):
         Actor.__init__(self, actor_config)
 
         self.pool.createQueue("inbox")
@@ -74,18 +76,13 @@ class Syslog(OutputModule):
 
         if isinstance(event, Bulk):
             for e in event.dump():
-                data = e.get(self.kwargs.selection)
-                self.__writeLog(data)
+                message = e.format(self.kwargs.message, '.')
+                level = e.format(self.kwargs.level, '.')
+                syslog.syslog(level, message)
         else:
-            data = event.get(self.kwargs.selection)
-            self.__writeLog(data)
-
-    def __writeLog(self, data):
-
-        if isinstance(data, Log):
-            syslog.syslog(data.level, "%s: %s" % (data.module, data.message))
-        else:
-            syslog.syslog(self.kwargs.level, "%s: %s" % (self.kwargs.ident, str(data)))
+            message = event.format(self.kwargs.message, '.')
+            level = event.format(self.kwargs.level, '.')
+            syslog.syslog(level, message)
 
     def postHook(self):
         syslog.closelog()
