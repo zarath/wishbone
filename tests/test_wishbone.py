@@ -22,8 +22,8 @@
 #
 #
 
-from wishbone import QueuePool
-from wishbone import Queue
+from wishbone.queue import QueuePool
+from wishbone.queue import Queue
 from wishbone.utils.test import getter
 
 

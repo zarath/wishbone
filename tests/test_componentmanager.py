@@ -22,7 +22,7 @@
 #
 #
 
-from wishbone import ComponentManager
+from wishbone.componentmanager import ComponentManager
 
 c = ComponentManager()
 
