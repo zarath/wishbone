@@ -21,6 +21,10 @@ Features:
 
 Bugfixes:
 
+Misc:
+
+- Only support for Python3
+
 
 
 Version 2.3.1
