@@ -22,7 +22,7 @@
 #
 #
 
-from wishbone import ComponentManager
+from wishbone.componentmanager import ComponentManager
 from wishbone.event import Event
 
 def test_wishbone_function_decode_json():
