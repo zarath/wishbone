@@ -143,14 +143,6 @@ setup(
             'stdout = wishbone.module.stdout:STDOUT',
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
-        'wishbone.function.encode': [
-            'json = wishbone.function.encode_json:encodeJSONWrapper',
-            'msgpack = wishbone.function.encode_msgpack:encodeMSGPackWrapper'
-        ],
-        'wishbone.function.decode': [
-            'json = wishbone.function.decode_json:decodeJSONWrapper',
-            'msgpack = wishbone.function.decode_msgpack:decodeMSGPackWrapper'
-        ],
         'wishbone.function.process': [
             'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
             'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper'
