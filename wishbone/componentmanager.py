@@ -79,7 +79,7 @@ class ComponentManager():
                  namespace=["wishbone", "wishbone_contrib"],
                  protocol_categories=["encode", "decode"],
                  module_categories=["flow", "input", "output", "process"],
-                 function_categories=["process"],
+                 function_categories=["modify", "process"],
                  lookup_categories=["internal", "external"]
                  ):
         self.namespace = namespace

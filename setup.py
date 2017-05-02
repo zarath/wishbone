@@ -143,6 +143,9 @@ setup(
             'stdout = wishbone.module.stdout:STDOUT',
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
+        'wishbone.function.modify': [
+            'set = wishbone.function.modify_set:modifySetWrapper'
+        ],
         'wishbone.function.process': [
             'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
             'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper'

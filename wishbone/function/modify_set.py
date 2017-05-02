@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  test_module_jsonencode.py
+#  modify_set.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,23 +22,28 @@
 #
 #
 
-from wishbone.componentmanager import ComponentManager
-from wishbone.event import Event
 
-def test_wishbone_function_process_uppercase():
+def modifySetWrapper(data, destination='@data'):
 
-    e = Event({"case": "upper"})
-    f = ComponentManager().getComponentByName("wishbone.function.process.uppercase")("@data.case", "@data.case")
-    assert f(e).get() == {"case": "UPPER"}
+    '''
+    **Adds data to the desired field.**
 
-def test_wishbone_function_process_lowercase():
+    Adds the provided <data> to <destination>.
+    <data> can be a dynamic value.
 
-    e = Event({"case": "LOWER"})
-    f = ComponentManager().getComponentByName("wishbone.function.process.lowercase")("@data.case", "@data.case")
-    assert f(e).get() == {"case": "lower"}
+    Parameters:
 
-def test_wishbone_function_process_set():
+        - data(<anything>)()*
+           |  The data to add to <destination>
+    '''
 
-    e = Event({"hey": "how"})
-    f = ComponentManager().getComponentByName("wishbone.function.modify.set")({"greeting": "hello"}, "@tmp.test")
-    assert f(e).get("@tmp.test") == {"greeting": "hello"}
+    def modifySet(event):
+
+        nonlocal data
+        if isinstance(data, str):
+            data = event.format(data)
+
+        event.set(data, destination)
+        return event
+
+    return modifySet
