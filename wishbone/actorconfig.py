@@ -41,10 +41,12 @@ class ActorConfig(object):
         protocol_name (str): A protocol decode or encode component name.
         protocol_function (func): The protocol function to apply
         protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
+        disable_exception_handling (bool): If True, exception handling is disabled. Usefull for testing
     '''
 
     def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[],
-                 protocol_name=None, protocol_function=None, protocol_event=False):
+                 protocol_name=None, protocol_function=None, protocol_event=False,
+                 disable_exception_handling=False):
 
         '''
         Args:
@@ -58,6 +60,7 @@ class ActorConfig(object):
             protocol_name (str): A protocol decode or encode component name.
             protocol_function (func): The protocol function to apply
             protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
+            disable_exception_handling (bool): If True, exception handling is disabled. Usefull for testing
         '''
         self.name = name
         self.size = size
@@ -69,3 +72,4 @@ class ActorConfig(object):
         self.protocol_name = protocol_name
         self.protocol_function = protocol_function
         self.protocol_event = protocol_event
+        self.disable_exception_handling = disable_exception_handling

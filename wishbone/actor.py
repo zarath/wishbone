@@ -199,7 +199,8 @@ class Actor(object):
                     # obey that.
                     break
                 except Exception as err:
-                    raise
+                    if self.config.disable_exception_handling:
+                        raise
                     self.logging.error("Backgrounded function '%s' of module instance '%s' caused an error. This needs attention. Restarting it in 2 seconds. Reason: %s" % (
                         function.__name__,
                         self.name,
@@ -250,6 +251,8 @@ class Actor(object):
                 try:
                     event = f(event)
                 except Exception as err:
+                    if self.config.disable_exception_handling:
+                        raise
                     self.logging.error("Function '%s' is skipped as it is causing an error. Reason: '%s'" % (f.__name__, err))
         return event
 
@@ -290,6 +293,8 @@ class Actor(object):
             try:
                 function(event)
             except Exception as err:
+                if self.config.disable_exception_handling:
+                        raise
                 exc_type, exc_value, exc_traceback = exc_info()
                 info = (traceback.extract_tb(exc_traceback)[-1][1], str(exc_type), str(exc_value))
 
