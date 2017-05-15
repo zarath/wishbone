@@ -73,13 +73,13 @@ class JSON(Decode):
             data = self.__leftover + data.decode(self.charset)
             if len(data) > self.buffer_size:
                 raise Exception("Buffer exceeded")
-            print ("yea"*100)
             while self.delimiter in data:
                 item, data = data.split(self.delimiter, 1)
-                try:
-                    yield loads(item)
-                except Exception as err:
-                    raise ProtocolError("ProtcolError: %s" % (err))
+                if item != "":
+                    try:
+                        yield loads(item)
+                    except Exception as err:
+                        raise ProtocolError("ProtcolError: %s" % (err))
             self.__leftover = data
 
     def __plainNoDelimiter(self, data):
@@ -106,6 +106,5 @@ class JSON(Decode):
     def handleReadlinesMethod(self, data):
 
         for item in data.readlines() + [None]:
-            print ("x"*100, item)
             for result in self.handler(item):
                 yield result
