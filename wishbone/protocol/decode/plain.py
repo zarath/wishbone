@@ -85,3 +85,9 @@ class Plain(Decode):
             if self.__buffer_size > self.buffer_size:
                 raise Exception("Buffer exceeded.")
             yield []
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines() + [None]:
+            for result in self.handler(item):
+                yield result

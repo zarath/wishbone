@@ -41,6 +41,8 @@ class Decode(object):
             return self.handleDict(data)
         elif isinstance(data, list) or data is None:
             return self.handleList(data)
+        elif hasattr(data, "readlines") and callable(data.readlines):
+            return self.handleReadlinesMethod(data)
         else:
             raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
 
@@ -64,6 +66,10 @@ class Decode(object):
 
     def handleList(self, data):
         raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
+    def handleReadLinesMethod(self, data):
+        raise ProtocolError("%s is not supported by this Decoder." % (type(data)))
+
 
 class Encode(object):
 

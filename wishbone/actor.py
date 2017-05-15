@@ -294,7 +294,7 @@ class Actor(object):
                 function(event)
             except Exception as err:
                 if self.config.disable_exception_handling:
-                        raise
+                    raise
                 exc_type, exc_value, exc_traceback = exc_info()
                 info = (traceback.extract_tb(exc_traceback)[-1][1], str(exc_type), str(exc_value))
 

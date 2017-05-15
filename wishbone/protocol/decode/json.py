@@ -73,6 +73,7 @@ class JSON(Decode):
             data = self.__leftover + data.decode(self.charset)
             if len(data) > self.buffer_size:
                 raise Exception("Buffer exceeded")
+            print ("yea"*100)
             while self.delimiter in data:
                 item, data = data.split(self.delimiter, 1)
                 try:
@@ -101,3 +102,10 @@ class JSON(Decode):
             yield loads(data)
         except Exception as err:
             raise ProtocolError("ProtocolError: %s" % (err))
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines() + [None]:
+            print ("x"*100, item)
+            for result in self.handler(item):
+                yield result

@@ -69,3 +69,9 @@ class MSGPack(Decode):
                     return []
         except BufferFull:
             raise Exception("Buffer of %s bytes full." % (self.buffer_size))
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines() + [None]:
+            for result in self.handler(item):
+                yield result
