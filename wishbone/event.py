@@ -26,8 +26,9 @@ import arrow
 import time
 from wishbone.error import BulkFull, InvalidData, InvalidEventFormat
 from gevent.event import Event as Gevent_Event
+from uuid import uuid4
 
-EVENT_RESERVED = ["@timestamp", "@version", "@data", "@tmp", "@errors"]
+EVENT_RESERVED = ["@timestamp", "@version", "@data", "@tmp", "@errors", "@uuid"]
 
 
 class Bulk(object):
@@ -134,7 +135,7 @@ class Event(object):
     module to the other.
     '''
 
-    def __init__(self, data=None, confirmation_modules=[]):
+    def __init__(self, data=None, confirmation_modules=[], uuid=True):
 
         self.data = {
             "@timestamp": time.time(),
@@ -155,6 +156,9 @@ class Event(object):
         else:
             self.getConfirmation = self.__dummy
             self.confirm = self.__dummy
+
+        if uuid:
+            self.data["@uuid"] = str(uuid4())
 
     def __getConfirmation(self):
         '''
