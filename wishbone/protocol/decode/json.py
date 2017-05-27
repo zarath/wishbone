@@ -35,9 +35,10 @@ class EndOfStream(Exception):
 
 class JSON(Decode):
 
-    '''**Decodes JSON data.**
+    '''**Decode JSON data into a Python data structure.**
 
-    Converts bytestring into a JSON string using the defined charset.
+    Convert a JSON bytestring into a Python data structure using the defined
+    charset.
 
     Parameters:
 
@@ -75,10 +76,11 @@ class JSON(Decode):
                 raise Exception("Buffer exceeded")
             while self.delimiter in data:
                 item, data = data.split(self.delimiter, 1)
-                try:
-                    yield loads(item)
-                except Exception as err:
-                    raise ProtocolError("ProtcolError: %s" % (err))
+                if item != "":
+                    try:
+                        yield loads(item)
+                    except Exception as err:
+                        raise ProtocolError("ProtcolError: %s" % (err))
             self.__leftover = data
 
     def __plainNoDelimiter(self, data):
@@ -101,3 +103,9 @@ class JSON(Decode):
             yield loads(data)
         except Exception as err:
             raise ProtocolError("ProtocolError: %s" % (err))
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines() + [None]:
+            for result in self.handler(item):
+                yield result

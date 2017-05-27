@@ -35,9 +35,10 @@ class EndOfStream(Exception):
 
 class MSGPack(Decode):
 
-    '''**Decodes MSGPack format into .**
+    '''**Decode MSGpack data into a Python data structure.**
 
-    Converts incoming data into unicode using the defined charset.
+    Convert a MSGPack bytestring into a Python data structure using the
+    defined charset.
 
     Parameters:
 
@@ -69,3 +70,9 @@ class MSGPack(Decode):
                     return []
         except BufferFull:
             raise Exception("Buffer of %s bytes full." % (self.buffer_size))
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines():
+            for result in self.handler(item):
+                yield result

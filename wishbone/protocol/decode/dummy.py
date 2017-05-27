@@ -27,6 +27,16 @@ from wishbone.protocol import Decode
 
 class Dummy(Decode):
 
+    '''**A dummy decoder.**
+
+    A dummy decoder which yields unmodified data back.
+
+
+    Parameters:
+
+        n/a
+    '''
+
     def __init__(self, *args, **kwargs):
         pass
 

@@ -23,18 +23,35 @@
 #
 
 
-from wishbone.protocol.decode.msgpack import MSGPack
+from wishbone.protocol.decode.json import JSON
 
+class ReadlinesMock():
 
-def test_protocol_decode_msgpack_basic():
+    data = [
+        b'{"one":',
+        b'1}'
+    ]
 
-    m = MSGPack()
-    for item in m.handler(b'\x93\x01\x02\x03'):
+    def readlines(self):
+
+        return self.data
+
+def test_protocol_decode_json_basic():
+
+    m = JSON()
+    for item in m.handler(b'{"one": 1}'):
+        assert item == {"one": 1}
+
+def test_protocol_decode_json_unicode():
+
+    m = JSON()
+    for item in m.handler(b'{"one": \xce\xb1"}'):
+        assert item == {"one": u"α"}
+        assert isinstance(item["one"], unicode)
+
+def test_protocol_decode_json_readlines():
+
+    j = JSON()
+    reader = ReadlinesMock()
+    for item in j.handler(reader):
         assert item == [1, 2, 3]
-
-def test_protocol_decode_msgpack_unicode():
-
-    m = MSGPack()
-    for item in m.handler(b'\x93\xce\xb1'):
-        assert item == [u"α"]
-        assert isinstance(item[0], unicode)

@@ -20,7 +20,6 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-#
 
 from wishbone.protocol import Decode
 from io import BytesIO
@@ -32,9 +31,9 @@ class EndOfStream(Exception):
 
 class Plain(Decode):
 
-    '''**Decodes text.**
+    '''**Decode text data into a Python data structure.**
 
-    Converts bytestring into unicode using the defined charset.
+    Converts text bytestring into unicode using the defined charset.
 
     Parameters:
 
@@ -65,7 +64,7 @@ class Plain(Decode):
     def __plainDelimiter(self, data):
 
         if data is None or data == b'':
-            yield []
+            yield self.__leftover.rstrip()
         else:
             data = self.__leftover + data.decode(self.charset)
             if len(data) > self.buffer_size:
@@ -79,9 +78,16 @@ class Plain(Decode):
 
         if data is None or data == b'':
             self.buffer.seek(0)
-            yield self.buffer.getvalue().decode(self.charset)
+            yield self.buffer.getvalue().decode(self.charset).rstrip(self.delimiter)
         else:
             self.__buffer_size += self.buffer.write(data)
             if self.__buffer_size > self.buffer_size:
                 raise Exception("Buffer exceeded.")
-            yield []
+            return []
+
+    def handleReadlinesMethod(self, data):
+
+        for item in data.readlines() + [None]:
+            for result in self.handler(item):
+                if result != "":
+                    yield result

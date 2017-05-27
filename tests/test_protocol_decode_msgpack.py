@@ -26,6 +26,17 @@
 from wishbone.protocol.decode.msgpack import MSGPack
 
 
+class ReadlineMock():
+
+    data = [
+        b'\x93\x01',
+        b'\x02\x03'
+    ]
+
+    def readlines(self):
+
+        return self.data
+
 def test_protocol_decode_msgpack_basic():
 
     m = MSGPack()
@@ -37,3 +48,10 @@ def test_protocol_decode_msgpack_unicode():
     m = MSGPack()
     for item in m.handler(b'\x91\xa2\xce\xb1'):
         assert item == ["α"]
+
+def test_protocol_decode_msgpack_readlines():
+
+    m = MSGPack()
+    reader = ReadlineMock()
+    for item in m.handler(reader):
+        assert item == [1, 2, 3]
