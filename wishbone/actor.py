@@ -27,7 +27,7 @@ from wishbone.logging import Logging
 from wishbone.event import Event as Wishbone_Event
 from wishbone.event import Metric
 from wishbone.event import Bulk
-from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule
+from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule, TTLExpired
 from wishbone.lookup import EventLookup
 from wishbone.moduletype import ModuleType
 from wishbone.actorconfig import ActorConfig
@@ -288,8 +288,15 @@ class Actor(object):
 
         while self.loop():
             event = self.pool.queue.__dict__[queue].get()
+            try:
+                event.decrementTTL()
+            except TTLExpired as err:
+                self.logging.warning("Event with UUID %s dropped. Reason: %s" % (event.get("@uuid"), err))
+                continue
+
             event = self.__applyFunctions(queue, event)
             self.current_event = event
+
             try:
                 function(event)
             except Exception as err:
@@ -318,9 +325,18 @@ class Actor(object):
 
     def __generateEventWithPayload(self, data={}):
 
+        '''
+        Generates a new event with payload <data>.
+        '''
+
         return Wishbone_Event(data, confirmation_modules=self.config.confirmation_modules)
 
     def __generateEvent(self, data={}):
+
+        '''
+        Generates a new event from <data>. <data> is supposed to contain the
+        metadata fields too.
+        '''
 
         e = Wishbone_Event(confirmation_modules=self.config.confirmation_modules)
         e.slurp(data)

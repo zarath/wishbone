@@ -24,7 +24,7 @@
 
 import arrow
 import time
-from wishbone.error import BulkFull, InvalidData, InvalidEventFormat
+from wishbone.error import BulkFull, InvalidData, InvalidEventFormat, TTLExpired
 from gevent.event import Event as Gevent_Event
 from uuid import uuid4
 
@@ -135,7 +135,7 @@ class Event(object):
     module to the other.
     '''
 
-    def __init__(self, data=None, confirmation_modules=[], uuid=True):
+    def __init__(self, data=None, confirmation_modules=[], uuid=True, ttl=254):
 
         self.data = {
             "@timestamp": time.time(),
@@ -144,7 +144,8 @@ class Event(object):
             "@tmp": {
             },
             "@errors": {
-            }
+            },
+            "@ttl": ttl
         }
 
         self.confirmation_modules = confirmation_modules
@@ -198,6 +199,13 @@ class Event(object):
         '''
 
         self.set(self.deepish_copy(self.get(source)), destination)
+
+    def decrementTTL(self):
+
+        if self.data["@ttl"] == 0:
+            raise TTLExpired("Event TTL expired in transit.")
+        else:
+            self.data["@ttl"] -= 1
 
     def deepish_copy(self, org):
         '''

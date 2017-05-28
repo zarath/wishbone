@@ -118,3 +118,7 @@ class ProtocolError(Exception):
 
 class ProtocolInitFailure(Exception):
     pass
+
+
+class TTLExpired(Exception):
+    pass
