@@ -28,7 +28,7 @@ from wishbone.error import BulkFull, InvalidData, InvalidEventFormat, TTLExpired
 from gevent.event import Event as Gevent_Event
 from uuid import uuid4
 
-EVENT_RESERVED = ["@timestamp", "@version", "@data", "@tmp", "@errors", "@uuid"]
+EVENT_RESERVED = ["timestamp", "version", "data", "tmp", "errors", "uuid"]
 
 
 class Bulk(object):
@@ -60,7 +60,7 @@ class Bulk(object):
         for event in self.__events:
             yield event
 
-    def dumpFieldAsList(self, field="@data"):
+    def dumpFieldAsList(self, field="data"):
         '''
         Returns a list containing a specific field of each stored event.
         Events with a missing field are skipped.
@@ -74,7 +74,7 @@ class Bulk(object):
                 pass
         return result
 
-    def dumpFieldAsString(self, field="@data"):
+    def dumpFieldAsString(self, field="data"):
         '''
         Returns a string joining <field> of each event with <self.delimiter>.
         Events with a missing field are skipped.
@@ -138,14 +138,14 @@ class Event(object):
     def __init__(self, data=None, confirmation_modules=[], uuid=True, ttl=254):
 
         self.data = {
-            "@timestamp": time.time(),
-            "@version": 1,
-            "@data": data,
-            "@tmp": {
+            "timestamp": time.time(),
+            "version": 1,
+            "data": data,
+            "tmp": {
             },
-            "@errors": {
+            "errors": {
             },
-            "@ttl": ttl
+            "ttl": ttl
         }
 
         self.confirmation_modules = confirmation_modules
@@ -159,7 +159,7 @@ class Event(object):
             self.confirm = self.__dummy
 
         if uuid:
-            self.data["@uuid"] = str(uuid4())
+            self.data["uuid"] = str(uuid4())
 
     def __getConfirmation(self):
         '''
@@ -202,10 +202,10 @@ class Event(object):
 
     def decrementTTL(self):
 
-        if self.data["@ttl"] == 0:
+        if self.data["ttl"] == 0:
             raise TTLExpired("Event TTL expired in transit.")
         else:
-            self.data["@ttl"] -= 1
+            self.data["ttl"] -= 1
 
     def deepish_copy(self, org):
         '''
@@ -273,7 +273,7 @@ class Event(object):
         '''
         Dumps the content of the event.
 
-        :param bool complete: Determines whether to include @tmp and @errors.
+        :param bool complete: Determines whether to include tmp and errors.
         :param bool convert_timestamp: When True converts <Arrow> object to iso8601 string.
         :return: The content of the event.
         :rtype: dict
@@ -281,9 +281,9 @@ class Event(object):
 
         d = {}
         for key, value in list(self.data.items()):
-            if key == "@tmp" and not complete:
+            if key == "tmp" and not complete:
                 continue
-            if key == "@errors" and not complete:
+            if key == "errors" and not complete:
                 continue
             elif isinstance(value, arrow.arrow.Arrow) and convert_timestamp:
                 d[key] = str(value)
@@ -292,7 +292,7 @@ class Event(object):
 
         return d
 
-    def format(self, template, key="@data"):
+    def format(self, template, key="data"):
         '''
         Returns a formatted string using the provided template and key
 
@@ -307,7 +307,7 @@ class Event(object):
         except Exception:
             return template
 
-    def get(self, key="@data"):
+    def get(self, key="data"):
         '''
         Returns the value of <key>.
 
@@ -333,7 +333,7 @@ class Event(object):
             except:
                 raise KeyError(key)
 
-    def has(self, key="@data"):
+    def has(self, key="data"):
         '''
         Returns a boot indicating the event has <key>
 
@@ -348,7 +348,7 @@ class Event(object):
         else:
             return True
 
-    def set(self, value, key="@data"):
+    def set(self, value, key="data"):
         '''
         Sets the value of <key>.
 
@@ -369,7 +369,7 @@ class Event(object):
         '''Expects <data> to be a dict representation of an <Event> and
         alligns this event to it.
 
-        The @timestamp field will be reset to the time this method has been
+        The timestamp field will be reset to the time this method has been
         called.
 
         :param dict data: The dict object containing the complete event.
@@ -379,11 +379,12 @@ class Event(object):
         try:
             assert isinstance(data, dict), "event.slurp() expects a dict."
             for item in [
-                ("@timestamp", int),
-                ("@version", int),
-                ("@data", None),
-                ("@tmp", dict),
-                ("@errors", dict),
+                ("timestamp", int),
+                ("version", int),
+                ("data", None),
+                ("tmp", dict),
+                ("errors", dict),
+                ("ttl", int),
             ]:
                 assert item[0] in data, "%s is missing" % (item[0])
                 if item[1] is not None:
@@ -392,6 +393,6 @@ class Event(object):
             raise InvalidEventFormat("The incoming data could not be used to construct an event.  Reason: '%s'." % err)
         else:
             self.data = data
-            self.data["@timestamp"] = time.time()
+            self.data["timestamp"] = time.time()
 
     raw = dump
