@@ -51,7 +51,7 @@ class Syslog(OutputModule):
            |  If not provided the script name is used.
            |  (Can be a dynamic value)
 
-        - message(str)("{@data[message]}")*
+        - message(str)("{data[message]}")*
            |  The syslog id string.
            |  If not provided the script name is used.
            |  (Can be a dynamic value)
@@ -62,7 +62,7 @@ class Syslog(OutputModule):
            |  incoming events
     '''
 
-    def __init__(self, actor_config, level=5, ident=os.path.basename(sys.argv[0]), message="{@data[message]}"):
+    def __init__(self, actor_config, level=5, ident=os.path.basename(sys.argv[0]), message="{data[message]}"):
         Actor.__init__(self, actor_config)
 
         self.pool.createQueue("inbox")

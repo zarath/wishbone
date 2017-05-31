@@ -23,7 +23,7 @@
 #
 
 
-def processLowercaseWrapper(source='@data', destination='@data', *args, **kwargs):
+def processLowercaseWrapper(source='data', destination='data', *args, **kwargs):
 
     '''
     **Puts the desired field in lowercase.**

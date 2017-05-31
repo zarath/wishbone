@@ -102,7 +102,7 @@ class HumanLogFormat(ProcessModule):
 
     def consume(self, event):
 
-        data = event.get('@data')
+        data = event.get('data')
 
         if all([True if item in data.keys() else False for item in ["time", "pid", "level", "module", "message"]]):
             log = ("%s %s %s %s: %s" % (

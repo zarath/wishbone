@@ -41,7 +41,7 @@ class FileOut(OutputModule):
 
     Parameters:
 
-        - selection(str)("@data")
+        - selection(str)("data")
            |  The part of the event to submit externally.
            |  Use an empty string to refer to the complete event.
 
@@ -59,7 +59,7 @@ class FileOut(OutputModule):
 
     '''
 
-    def __init__(self, actor_config, selection='@data', location="./wishbone.out", timestamp=False):
+    def __init__(self, actor_config, selection='data', location="./wishbone.out", timestamp=False):
         Actor.__init__(self, actor_config)
 
         self.pool.createQueue("inbox")

@@ -23,7 +23,7 @@
 #
 
 
-def processUppercaseWrapper(source='@data', destination='@data', *args, **kwargs):
+def processUppercaseWrapper(source='data', destination='data', *args, **kwargs):
 
     '''
     **Puts the desired field in uppercase.**

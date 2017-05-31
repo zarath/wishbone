@@ -47,7 +47,7 @@ class Cron(InputModule):
         - payload(str)("wishbone")
             | The content of <field>.
 
-        - field(str)("@data")
+        - field(str)("data")
             | The location to write <payload> to.
 
 
@@ -57,7 +57,7 @@ class Cron(InputModule):
            |  Outgoing messges
     '''
 
-    def __init__(self, actor_config, cron="*/10 * * * *", payload="wishbone", field="@data"):
+    def __init__(self, actor_config, cron="*/10 * * * *", payload="wishbone", field="data"):
 
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")

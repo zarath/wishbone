@@ -289,7 +289,7 @@ class ConfigFile(object):
                 'module': "wishbone.module.output.syslog",
                 "arguments": {
                     "ident": self.identification,
-                    "message": "{@data[module]}: {@data[message]}"
+                    "message": "{data[module]}: {data[message]}"
                     },
                 "context": "_logs",
                 "functions": {}

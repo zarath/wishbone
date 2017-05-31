@@ -23,7 +23,7 @@
 #
 
 
-def modifySetWrapper(data, destination='@data'):
+def modifySetWrapper(data, destination='data'):
 
     '''
     **Adds data to the desired field.**

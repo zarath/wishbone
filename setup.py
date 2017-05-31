@@ -44,7 +44,8 @@ install_requires = [
     'uplook==1.1.1',
     'pyyaml',
     'jsonschema',
-    'msgpack-python'
+    'msgpack-python',
+    'easydict'
 ]
 
 dependency_links = [

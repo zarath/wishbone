@@ -39,11 +39,11 @@ class Deserialize(FlowModule):
 
     Parameters:
 
-        - source(str)("@data")
+        - source(str)("data")
            |  The source of the array.
            |  (Ignored when incoming type is Bulk)
 
-        - destination(str)("@data")
+        - destination(str)("data")
            |  The destination key to store the array item.
            |  (Ignored when incoming type is Bulk)
 
@@ -56,7 +56,7 @@ class Deserialize(FlowModule):
            |  Outgoing messges
     '''
 
-    def __init__(self, actor_config, source="@data", destination="@data"):
+    def __init__(self, actor_config, source="data", destination="data"):
 
         Actor.__init__(self, actor_config)
 
@@ -76,7 +76,7 @@ class Deserialize(FlowModule):
             if isinstance(data, list):
                 for item in data:
                     e = event.clone()
-                    e.set(True, "@tmp.%s.generated_by" % (self.name))
+                    e.set(True, "tmp.%s.generated_by" % (self.name))
                     e.set("", self.kwargs.destination)
                     e.set(item, self.kwargs.destination)
                     self.submit(e, self.pool.queue.outbox)

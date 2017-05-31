@@ -39,7 +39,7 @@ class Switch(FlowModule):
         - Using a lookup value.
 
         - By sending an event to the <switch> queue with the value of
-          <outgoing> stored under *@data*.
+          <outgoing> stored under *data*.
 
 
     Parameters:
@@ -55,7 +55,7 @@ class Switch(FlowModule):
         - switch
            |  incoming events to alter outgoing queue.
 
-        - outbox
+        - outbox*
            |  outgoing events
 
         - <connected_queue_1>
@@ -82,23 +82,29 @@ class Switch(FlowModule):
         if self.kwargs.outgoing in self.forbidden:
             raise ModuleInitFailure("Module parameter <outgoing> cannot have value '%s'." % (self.kwargs.outgoing))
 
+        self.destination = self.kwargs.outgoing
+        self._destination = self.kwargs.outgoing
+
     def consume(self, event):
 
-        destination = self.kwargs.outgoing
-        if destination in self.forbidden:
-            raise ReservedName("Cannot forward incoming events to queue '%s'." % (destination))
+        if self.kwargs.outgoing != self._destination:
+            self._destination = self.kwargs.outgoing
+            self.destination = self.kwargs.outgoing
+
+        if self.destination in self.forbidden:
+            raise ReservedName("Cannot forward incoming events to queue '%s'." % (self.destination))
         else:
-            self.submit(event, self.pool.getQueue(destination))
+            self.submit(event, self.pool.getQueue(self.destination))
 
     def switch(self, event):
 
         prefix = "<switch> queue received event"
         try:
-            name = event.get("@data")
+            name = event.get("data")
             if self.pool.hasQueue(name):
-                self.kwargs.outgoing = name
+                self.destination = name
                 self.logging.info("%s. Outgoing messages forwarded to queue '%s'." % (prefix, name))
             else:
                 self.logging.error("%s but module has no queue named '%s'." % (prefix, name))
         except KeyError:
-            self.logging.error("%s but has no value key @data." % (prefix))
+            self.logging.error("%s but has no value key data." % (prefix))
