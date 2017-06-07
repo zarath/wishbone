@@ -28,11 +28,9 @@ from wishbone.event import Event as Wishbone_Event
 from wishbone.event import Metric
 from wishbone.event import Bulk
 from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule, TTLExpired
-from wishbone.lookup import EventLookup
 from wishbone.moduletype import ModuleType
 from wishbone.actorconfig import ActorConfig
 
-from uplook.errors import NoSuchValue
 from collections import namedtuple
 from gevent import spawn, kill
 from gevent import sleep, socket
@@ -40,10 +38,8 @@ from gevent.event import Event
 from wishbone.error import QueueFull
 from time import time
 from sys import exc_info
-from uplook import UpLook
 import traceback
 import inspect
-# from dotmap import DotMap
 from easydict import EasyDict
 import jinja2
 
@@ -78,12 +74,13 @@ class Actor(object):
 
         self.__lookups = {}
 
-        self.__current_event = {}
-        # self.__buildUplook()
-        self.__setupCurrentVariables()
-
         self.stopped = True
 
+        self.__current_event = {}
+        self.raw_kwargs = {}
+        self.kwargs = EasyDict({})
+
+        self.__setupKwargs()
 
     def connect(self, source, destination_module, destination_queue):
         '''Connects the <source> queue to the <destination> queue.
@@ -109,20 +106,6 @@ class Actor(object):
         setattr(destination_module.pool.queue, destination_queue, self.pool.getQueue(source))
         self.pool.getQueue(source).disableFallThrough()
         self.logging.debug("Connected queue %s.%s to %s.%s" % (self.name, source, destination_module.name, destination_queue))
-
-    # def doEventLookup(self, name):
-
-    #     try:
-    #         return self.current_event.get(name)
-    #     except AttributeError:
-    #         return ""
-    #     except KeyError:
-    #         # No event has passed through this module.  Most likely this is an
-    #         # input module which creates its own events. Therefor there is
-    #         # nothing to lookup yet and there for we rely up UpLook to return
-    #         # the default value for this lookup if any.
-    #         self.logging.debug("There is no lookup value with name '%s' Falling back to default lookup value if any." % (name))
-    #         raise NoSuchValue
 
     def getChildren(self, queue=None):
         '''Returns the queue name <queue> is connected to.'''
@@ -163,6 +146,15 @@ class Actor(object):
     def preHook(self):
 
         self.logging.debug("Initialized.")
+
+    def renderKwargs(self, event=None):
+
+        if event is None:
+            for name, template in self.raw_kwargs.items():
+                self.kwargs[name] = template.render(self.__current_event)
+        else:
+            for name, template in self.raw_kwargs.items():
+                self.kwargs[name] = template.render(event.dump(complete=True))
 
     def registerConsumer(self, function, queue):
         '''Registers <function> to process all events in <queue>
@@ -262,29 +254,6 @@ class Actor(object):
                     self.logging.error("Function '%s' is skipped as it is causing an error. Reason: '%s'" % (f.__name__, err))
         return event
 
-    # def __buildUplook(self):
-
-    #     self.__current_event = {}
-    #     args = {}
-    #     for key, value in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
-    #         if key == "self" or isinstance(value, ActorConfig):
-    #             next
-    #         else:
-    #             args[key] = value
-
-    #     uplook = UpLook(**args)
-    #     for name in uplook.listFunctions():
-    #         if name not in self.config.lookup:
-    #             raise ModuleInitFailure("A lookup function '%s' was defined but no lookup function with that name registered." % (name))
-    #         else:
-    #             if isinstance(self.config.lookup[name], EventLookup):
-    #                 uplook.registerLookup(name, self.doEventLookup)
-    #             else:
-    #                 uplook.registerLookup(name, self.config.lookup[name])
-
-    #     self.uplook = uplook
-    #     self.kwargs = uplook.get()
-
     def __consumer(self, function, queue):
         '''Greenthread which applies <function> to each element from <queue>
         '''
@@ -295,7 +264,7 @@ class Actor(object):
         while self.loop():
             event = self.pool.queue.__dict__[queue].get()
             self.__current_event = event.dump(complete=True)
-            self.__renderCurrentVariables()
+            self.renderKwargs()
             try:
                 event.decrementTTL()
             except TTLExpired as err:
@@ -394,25 +363,23 @@ class Actor(object):
                 self.logging.debug("This 'Output' type module has no encoder method set. Setting the configured one.")
                 self.encode = self.config.protocol_function
 
-    def __renderCurrentVariables(self):
+    def __setupKwargs(self):
 
-        for name, template in self.__arg_templates.items():
-
-            self.kwargs[name] = template.render(self.__current_event)
-
-    def __setupCurrentVariables(self):
-
-        self.__arg_templates = {}
-        self.kwargs = EasyDict({})
+        '''
+        Initial rendering of all templates to self.kwargs
+        '''
 
         for key, template in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
             if key == "self" or isinstance(template, ActorConfig):
                 next
             else:
                 if isinstance(template, str):
-                    self.__arg_templates[key] = jinja2.Template(template)
+                    self.raw_kwargs[key] = jinja2.Template(template)
                     for name, function in self.config.lookup.items():
-                        self.__arg_templates[key].globals[name] = function
-                    self.kwargs[key] = self.__arg_templates[key].render(data=self.__current_event)
+                        self.raw_kwargs[key].globals[name] = function
+                    try:
+                        self.kwargs[key] = self.raw_kwargs[key].render(data={})
+                    except Exception:
+                        self.kwargs[key] = self.raw_kwargs[key]
                 else:
                     self.kwargs[key] = template
