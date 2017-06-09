@@ -78,6 +78,7 @@ class Actor(object):
 
         self.__current_event = {}
         self.raw_kwargs = {}
+        self.template_kwargs = {}
         self.kwargs = EasyDict({})
 
         self.__setupKwargs()
@@ -150,11 +151,19 @@ class Actor(object):
     def renderKwargs(self, event=None):
 
         if event is None:
-            for name, template in self.raw_kwargs.items():
-                self.kwargs[name] = template.render(self.__current_event)
+            for name, template in self.template_kwargs.items():
+                try:
+                    self.kwargs[name] = template.render(self.__current_event)
+                except Exception as err:
+                    self.kwargs[name] = self.raw_kwargs[name]
+                    self.logging.debug("Problem rendering template. Reason: %s" % (err))
         else:
-            for name, template in self.raw_kwargs.items():
-                self.kwargs[name] = template.render(event.dump(complete=True))
+            for name, template in self.template_kwargs.items():
+                try:
+                    self.kwargs[name] = template.render(event.dump(complete=True))
+                except Exception as err:
+                    self.kwargs[name] = self.raw_kwargs[name]
+                    self.logging.debug("Problem rendering template. Reason: %s" % (err))
 
     def registerConsumer(self, function, queue):
         '''Registers <function> to process all events in <queue>
@@ -374,11 +383,12 @@ class Actor(object):
                 next
             else:
                 if isinstance(template, str):
-                    self.raw_kwargs[key] = jinja2.Template(template)
-                    for name, function in self.config.lookup.items():
-                        self.raw_kwargs[key].globals[name] = function
+                    self.raw_kwargs[key] = template
+                    self.template_kwargs[key] = jinja2.Template(template)
+                    for name, function in self.config.lookups.items():
+                        self.template_kwargs[key].globals[name] = function
                     try:
-                        self.kwargs[key] = self.raw_kwargs[key].render(data={})
+                        self.kwargs[key] = self.template_kwargs[key].render(data={})
                     except Exception:
                         self.kwargs[key] = self.raw_kwargs[key]
                 else:
