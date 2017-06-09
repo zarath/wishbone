@@ -218,7 +218,7 @@ class Default(object):
                 name=name,
                 size=self.size,
                 frequency=self.frequency,
-                lookup=lookups,
+                lookups=lookups,
                 description=instance.description,
                 functions=module_functions,
                 protocol_name=protocol_name,
