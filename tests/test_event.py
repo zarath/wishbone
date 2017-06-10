@@ -33,4 +33,4 @@ def test_event_format():
 def test_event_uuid():
 
     e = Event()
-    assert e.get('@uuid')
+    assert e.get('uuid')

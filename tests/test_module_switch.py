@@ -26,6 +26,7 @@ from wishbone.event import Event
 from wishbone.module.switch import Switch
 from wishbone.actor import ActorConfig
 from wishbone.utils.test import getter
+from gevent import sleep
 
 
 def test_module_switch_default():
@@ -51,7 +52,7 @@ def test_module_switch_default():
 
 def test_module_switch_event():
 
-    actor_config = ActorConfig('switch', 100, 1, {}, "")
+    actor_config = ActorConfig('switch', 100, 1, {}, "", disable_exception_handling=True)
 
     switch = Switch(actor_config, outgoing="one")
     switch.pool.queue.inbox.disableFallThrough()

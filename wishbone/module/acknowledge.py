@@ -73,7 +73,7 @@ class Acknowledge(FlowModule):
 
     Parameters:
 
-        - ack_id({@data})*
+        - ack_id({data})*
            |  A unique value identifying the event .
            |  (Can be a dynamic value)
 
@@ -93,9 +93,9 @@ class Acknowledge(FlowModule):
            |  Where events go to when unacknowledged
 
 
-    Variables written in the event @tmp.<name> namespace:
+    Variables written in the event tmp.<name> namespace:
 
-        - @tmp.<name>.ack_id
+        - tmp.<name>.ack_id
            |  The location of the acknowledgement ID when coming in through
            |  the inbox queue.
 
@@ -120,10 +120,10 @@ class Acknowledge(FlowModule):
         else:
             ack_id = event.format(self.kwargs.ack_id, '.')
 
-        if event.has("@tmp.%s.ack_id" % (self.name)):
-            self.logging.warning("Event arriving to <inbox> with @tmp.%s.ack_id already set.  Perhaps that should have been the <acknowledge> queue instead." % (self.name))
+        if event.has("tmp.%s.ack_id" % (self.name)):
+            self.logging.warning("Event arriving to <inbox> with tmp.%s.ack_id already set.  Perhaps that should have been the <acknowledge> queue instead." % (self.name))
         else:
-            event.set(ack_id, "@tmp.%s.ack_id" % (self.name))
+            event.set(ack_id, "tmp.%s.ack_id" % (self.name))
 
             if self.ack_table.unack(ack_id):
                 self.submit(event, self.pool.queue.outbox)
@@ -134,15 +134,15 @@ class Acknowledge(FlowModule):
 
     def acknowledge(self, event):
 
-        if event.has("@tmp.%s.ack_id" % (self.name)):
-            ack_id = event.get('@tmp.%s.ack_id' % (self.name))
+        if event.has("tmp.%s.ack_id" % (self.name)):
+            ack_id = event.get('tmp.%s.ack_id' % (self.name))
             if self.ack_table.ack(ack_id):
                 self.logging.debug("Event acknowledged with <ack_id> '%s'." % (ack_id))
-                event.delete('@tmp.%s.ack_id' % (self.name))
+                event.delete('tmp.%s.ack_id' % (self.name))
             else:
                 self.logging.debug("Event with <ack_id> '%s' received but was not previously acknowledged." % (ack_id))
         else:
-            self.logging.warning("Received event without '@tmp.%s.ack_id' therefor it is dropped" % (self.name))
+            self.logging.warning("Received event without 'tmp.%s.ack_id' therefor it is dropped" % (self.name))
 
     def generateID(self):
 

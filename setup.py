@@ -41,10 +41,11 @@ install_requires = [
     'prettytable',
     'python-daemon-3K',
     'requests',
-    'uplook==1.1.1',
     'pyyaml',
     'jsonschema',
-    'msgpack-python'
+    'msgpack-python',
+    'easydict',
+    'jinja2'
 ]
 
 dependency_links = [

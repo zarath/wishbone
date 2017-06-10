@@ -43,7 +43,7 @@ class TestEvent(InputModule):
         - payload(str/dict/int/float)("test")
            |  The content of the test message.
 
-        - destination(str)("@data")
+        - destination(str)("data")
            |  The location write the payload to
 
     Queues:
@@ -52,7 +52,7 @@ class TestEvent(InputModule):
            |  Contains the generated events.
     '''
 
-    def __init__(self, actor_config, interval=1, payload="test", destination="@data"):
+    def __init__(self, actor_config, interval=1, payload="test", destination="data"):
         InputModule.__init__(self, actor_config)
         self.pool.createQueue("outbox")
         self.decode = Dummy().handler

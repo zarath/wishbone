@@ -73,7 +73,7 @@ class STDOUT(OutputModule):
 
     Parameters:
 
-        - selection(str)("@data")
+        - selection(str)("data")
            |  The part of the event to submit externally.
            |  Use an empty string to refer to the complete event.
 
@@ -109,7 +109,7 @@ class STDOUT(OutputModule):
            |  Incoming events.
     '''
 
-    def __init__(self, actor_config, selection="@data", counter=False, prefix="", pid=False, colorize=False, foreground_color="WHITE", background_color="RESET", color_style="NORMAL"):
+    def __init__(self, actor_config, selection="data", counter=False, prefix="", pid=False, colorize=False, foreground_color="WHITE", background_color="RESET", color_style="NORMAL"):
         Actor.__init__(self, actor_config)
 
         self.__validateInput(foreground_color, background_color, color_style)

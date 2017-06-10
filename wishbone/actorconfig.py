@@ -44,7 +44,7 @@ class ActorConfig(object):
         disable_exception_handling (bool): If True, exception handling is disabled. Usefull for testing
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookup={}, description="A Wishbone actor.", functions={}, confirmation_modules=[],
+    def __init__(self, name, size=100, frequency=1, lookups={}, description="A Wishbone actor.", functions={}, confirmation_modules=[],
                  protocol_name=None, protocol_function=None, protocol_event=False,
                  disable_exception_handling=False):
 
@@ -65,7 +65,7 @@ class ActorConfig(object):
         self.name = name
         self.size = size
         self.frequency = frequency
-        self.lookup = lookup
+        self.lookups = lookups
         self.description = description
         self.functions = functions
         self.confirmation_modules = confirmation_modules

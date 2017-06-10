@@ -56,17 +56,17 @@ class Modify(ProcessModule):
 
     For example::
 
-        {"set": ["hi", "@data.one"]}
+        {"set": ["hi", "data.one"]}
 
 
-    Sets the value *"hi"* to key *"@data.one"*.
+    Sets the value *"hi"* to key *"data.one"*.
 
     In the the YAML formatted bootstrap file that would look like::
 
         module: wishbone.function.modify
         arguments:
           expressions:
-            - set: [ "hi", "@data.one" ]
+            - set: [ "hi", "data.one" ]
 
 
     Valid expressions are:
@@ -111,15 +111,15 @@ class Modify(ProcessModule):
         using *<regex>* and add the resulting matches to *<destination>*.
 
         The following example would extract the words "one" and "two" from
-        "@data.test" and add the to @data.extract:
+        "data.test" and add the to data.extract:
 
           expression::
 
-            extract: ["@data.extract", '(?P<first>.*?);(?P<second>.*)', "@data.test"]
+            extract: ["data.extract", '(?P<first>.*?);(?P<second>.*)', "data.test"]
 
           result::
 
-            {"@data":{"test:"one;two", extract:{"first": "one", "second": "two"}}}
+            {"data":{"test:"one;two", extract:{"first": "one", "second": "two"}}}
 
       - **join**::
 
@@ -175,7 +175,7 @@ class Modify(ProcessModule):
 
           time: [<destination_key>, <format>]
 
-        Modifies the *<@timestamp>* value according the the *<format>* specification
+        Modifies the *<timestamp>* value according the the *<format>* specification
         and stores it into *<destination_key>*.
         See http://crsmithdev.com/arrow/#format for the format.
 
@@ -277,7 +277,7 @@ class Modify(ProcessModule):
 
     def command_time(self, event, destination_key, f):
 
-        result = arrow.get(event.get("@timestamp")).format(f)
+        result = arrow.get(event.get("timestamp")).format(f)
         event.set(result, destination_key)
         return event
 
