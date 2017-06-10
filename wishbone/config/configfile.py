@@ -46,9 +46,9 @@ SCHEMA = {
                         }
                     },
                     "required": ["protocol"],
-                    "additionalProperties": False
-                }
-            }
+                    "additionalProperties": False,
+                },
+            },
         },
         "functions": {
             "type": "object",
@@ -175,10 +175,7 @@ class ConfigFile(object):
 
     def addProtocol(self, name, protocol, arguments={}, event=False):
 
-        if name not in self.config["protocols"]:
-            self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments, "event": event})
-        else:
-            raise Exception("Protocol instance name '%s' is already taken." % (name))
+        self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments, "event": event})
 
     def addConnection(self, source_module, source_queue, destination_module, destination_queue, context="configfile"):
 
