@@ -31,7 +31,6 @@ VERSION = '3.0.0'
 
 install_requires = [
     'arrow',
-    'attrdict==2.0.0',
     'colorama',
     'cronex',
     'gevent',

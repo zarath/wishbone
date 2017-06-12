@@ -23,7 +23,7 @@
 #
 
 import yaml
-from attrdict import AttrDict
+from easydict import EasyDict
 from jsonschema import validate
 
 SCHEMA = {
@@ -131,7 +131,7 @@ class ConfigFile(object):
         self.identification = identification
         self.colorize = colorize
         self.logstyle = logstyle
-        self.config = AttrDict({"lookups": AttrDict({}), "modules": AttrDict({}), "functions": AttrDict({}), "protocols": AttrDict({}), "routingtable": []})
+        self.config = EasyDict({"lookups": EasyDict({}), "modules": EasyDict({}), "functions": EasyDict({}), "protocols": EasyDict({}), "routingtable": []})
         self.__addLogFunnel()
         self.__addMetricFunnel()
         self.load(filename)
@@ -142,10 +142,15 @@ class ConfigFile(object):
             raise Exception("Module instance names cannot start with _.")
 
         if protocol is not None and protocol not in self.config.protocols:
-            raise Exception("No protocol module defined with name '%s'" % (protocol))
+            raise Exception("No protocol module defined with name '%s' for module instance '%s'" % (protocol, name))
+
+        for queue, fs in functions.items():
+            for function in fs:
+                if function not in self.config.functions.keys():
+                    raise Exception("No function defined with name '%s' for module instance '%s'." % (function, name))
 
         if name not in self.config["modules"]:
-            self.config["modules"][name] = AttrDict({
+            self.config["modules"][name] = EasyDict({
                 'description': description,
                 'module': module,
                 'arguments': arguments,
@@ -162,30 +167,30 @@ class ConfigFile(object):
     def addLookup(self, name, lookup, arguments={}):
 
         if name not in self.config["lookups"]:
-            self.config["lookups"][name] = AttrDict({"lookup": lookup, "arguments": arguments})
+            self.config["lookups"][name] = EasyDict({"lookup": lookup, "arguments": arguments})
         else:
             raise Exception("Lookup instance name '%s' is already taken." % (name))
 
     def addFunction(self, name, function, arguments={}):
 
-        self.config["functions"][name] = AttrDict({"function": function, "arguments": arguments})
+        self.config["functions"][name] = EasyDict({"function": function, "arguments": arguments})
 
     def addProtocol(self, name, protocol, arguments={}, event=False):
 
-        self.config["protocols"][name] = AttrDict({"protocol": protocol, "arguments": arguments, "event": event})
+        self.config["protocols"][name] = EasyDict({"protocol": protocol, "arguments": arguments, "event": event})
 
     def addConnection(self, source_module, source_queue, destination_module, destination_queue, context="configfile"):
 
         connected = self.__queueConnected(source_module, source_queue)
 
         if not connected:
-            self.config["routingtable"].append(AttrDict({"source_module": source_module, "source_queue": source_queue, "destination_module": destination_module, "destination_queue": destination_queue, "context": context}))
+            self.config["routingtable"].append(EasyDict({"source_module": source_module, "source_queue": source_queue, "destination_module": destination_module, "destination_queue": destination_queue, "context": context}))
         else:
             raise Exception("Cannot connect '%s.%s' to '%s.%s'. Reason: %s." % (source_module, source_queue, destination_module, destination_queue, connected))
 
     def dump(self):
 
-        return AttrDict(self.config, recursive=True)
+        return EasyDict(self.config, recursive=True)
 
     def load(self, filename):
 
@@ -260,25 +265,25 @@ class ConfigFile(object):
 
     def __addLogFunnel(self):
 
-        self.config["modules"]["_logs"] = AttrDict({'description': "Centralizes the logs of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_logs", "functions": {}})
+        self.config["modules"]["_logs"] = EasyDict({'description': "Centralizes the logs of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_logs", "functions": {}})
 
     def __addMetricFunnel(self):
 
-        self.config["modules"]["_metrics"] = AttrDict({'description': "Centralizes the metrics of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_metrics", "functions": {}})
+        self.config["modules"]["_metrics"] = EasyDict({'description': "Centralizes the metrics of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_metrics", "functions": {}})
 
     def _setupLoggingSTDOUT(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_format"] = AttrDict({'description': "Create a human readable log format.", 'module': "wishbone.module.process.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
+            self.config["modules"]["_logs_format"] = EasyDict({'description': "Create a human readable log format.", 'module': "wishbone.module.process.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
 
-            self.config["modules"]["_logs_stdout"] = AttrDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.module.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
+            self.config["modules"]["_logs_stdout"] = EasyDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.module.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
             self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")
 
     def _setupLoggingSYSLOG(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_syslog"] = AttrDict({
+            self.config["modules"]["_logs_syslog"] = EasyDict({
                 'description': "Writes all incoming messags to syslog.",
                 'module': "wishbone.module.output.syslog",
                 "arguments": {
