@@ -52,7 +52,7 @@ class JSON(Decode):
            |  The max amount of bytes allowed to read for 1 event
     '''
 
-    def __init__(self, charset="utf-8", delimiter="\n", buffer_size=4096):
+    def __init__(self, charset="utf-8", delimiter=None, buffer_size=4096):
 
         self.charset = charset
         self.delimiter = delimiter
