@@ -168,10 +168,7 @@ class ConfigFile(object):
 
     def addFunction(self, name, function, arguments={}):
 
-        if name not in self.config["functions"]:
-            self.config["functions"][name] = AttrDict({"function": function, "arguments": arguments})
-        else:
-            raise Exception("Function instance name '%s' is already taken." % (name))
+        self.config["functions"][name] = AttrDict({"function": function, "arguments": arguments})
 
     def addProtocol(self, name, protocol, arguments={}, event=False):
 
