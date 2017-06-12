@@ -54,4 +54,4 @@ def test_protocol_decode_json_readlines():
     j = JSON()
     reader = ReadlinesMock()
     for item in j.handler(reader):
-        assert item == [1, 2, 3]
+        assert item == {"one": 1}
