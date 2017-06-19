@@ -145,6 +145,7 @@ class Event(object):
             },
             "errors": {
             },
+            "tags": [],
             "ttl": ttl
         }
 
