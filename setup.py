@@ -144,7 +144,8 @@ setup(
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
         'wishbone.function.modify': [
-            'set = wishbone.function.modify_set:modifySetWrapper'
+            'set = wishbone.function.modify_set:modifySetWrapper',
+            'append = wishbone.function.modify_append:modifyAppendWrapper'
         ],
         'wishbone.function.process': [
             'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
