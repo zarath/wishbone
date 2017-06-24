@@ -47,7 +47,6 @@ class StructuredDataFile():
     '''
 
     def __init__(self, schema=None, expect_json=True, expect_yaml=True):
-
         '''
         Args:
             schema (str): The JSONschema to validate the loaded data against.
@@ -71,14 +70,12 @@ class StructuredDataFile():
                 pass
 
     def dump(self):
-
         '''Dumps the complete content'''
 
         with self.lock:
             return self.content
 
     def get(self, path):
-
         '''Returns the content of the file.  If the file isn't loaded yet, it
         tries to do that.'''
 
@@ -88,7 +85,6 @@ class StructuredDataFile():
             return self.content[path]
 
     def load(self, path):
-
         '''Loads the file into the module and validates the content when required.'''
 
         with self.lock:
