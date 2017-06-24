@@ -35,6 +35,10 @@ def modifyAppendWrapper(data, destination='tags'):
         - data(str/int/float)()
            |  data to add to <destination>
            |  can be a string or number.
+
+        - destination(str)(tags)
+           |  The destination field to append <data> to.
+           |  <destination> is expected to be an array.
     '''
 
     def modifyAppend(event):
@@ -42,8 +46,11 @@ def modifyAppendWrapper(data, destination='tags'):
         nonlocal data
         if isinstance(data, (int, float, str)):
             lst = event.get(destination)
-            lst.append(data)
-            event.set(lst, destination)
+            if isinstance(lst, list):
+                lst.append(data)
+                event.set(lst, destination)
+            else:
+                raise Exception("'%s' is not an array" % (destination))
         else:
             raise Exception("'%s' is not a number or string." % (data))
         return event
