@@ -309,7 +309,6 @@ def main():
     try:
         BootStrap()
     except Exception as err:
-        raise
         print(("Failed to bootstrap instance.  Reason: %s" % (err)))
 
 
