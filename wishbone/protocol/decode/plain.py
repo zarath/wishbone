@@ -65,6 +65,7 @@ class Plain(Decode):
 
         if data is None or data == b'':
             yield self.__leftover.rstrip()
+            self.__leftover = ""
         else:
             data = self.__leftover + data.decode(self.charset)
             if len(data) > self.buffer_size:
