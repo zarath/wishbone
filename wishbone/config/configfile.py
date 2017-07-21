@@ -131,7 +131,13 @@ class ConfigFile(object):
         self.identification = identification
         self.colorize = colorize
         self.logstyle = logstyle
-        self.config = EasyDict({"lookups": EasyDict({}), "modules": EasyDict({}), "functions": EasyDict({}), "protocols": EasyDict({}), "routingtable": []})
+        self.config = EasyDict({
+            "lookups": EasyDict({}),
+            "modules": EasyDict({}),
+            "functions": EasyDict({}),
+            "protocols": EasyDict({}),
+            "routingtable": []
+        })
         self.__addLogFunnel()
         self.__addMetricFunnel()
         self.load(filename)
@@ -167,7 +173,10 @@ class ConfigFile(object):
     def addLookup(self, name, lookup, arguments={}):
 
         if name not in self.config["lookups"]:
-            self.config["lookups"][name] = EasyDict({"lookup": lookup, "arguments": arguments})
+            self.config["lookups"][name] = EasyDict({
+                "lookup": lookup,
+                "arguments": arguments
+            })
         else:
             raise Exception("Lookup instance name '%s' is already taken." % (name))
 
@@ -265,19 +274,53 @@ class ConfigFile(object):
 
     def __addLogFunnel(self):
 
-        self.config["modules"]["_logs"] = EasyDict({'description': "Centralizes the logs of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_logs", "functions": {}})
+        self.config["modules"]["_logs"] = EasyDict({
+            'description': "Centralizes the logs of all modules.",
+            'module': "wishbone.module.flow.funnel",
+            "arguments": {
+            },
+            "context": "_logs",
+            "functions": {
+            }
+        })
 
     def __addMetricFunnel(self):
 
-        self.config["modules"]["_metrics"] = EasyDict({'description': "Centralizes the metrics of all modules.", 'module': "wishbone.module.flow.funnel", "arguments": {}, "context": "_metrics", "functions": {}})
+        self.config["modules"]["_metrics"] = EasyDict({
+            'description': "Centralizes the metrics of all modules.",
+            'module': "wishbone.module.flow.funnel",
+            "arguments": {
+            },
+            "context": "_metrics",
+            "functions": {
+            }
+        })
 
     def _setupLoggingSTDOUT(self):
 
         if not self.__queueConnected("_logs", "outbox"):
-            self.config["modules"]["_logs_format"] = EasyDict({'description': "Create a human readable log format.", 'module': "wishbone.module.process.humanlogformat", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
+            self.config["modules"]["_logs_format"] = EasyDict({
+                "description": "Create a human readable log format.",
+                "module": "wishbone.module.process.humanlogformat",
+                "arguments": {
+                    "colorize": self.colorize
+                },
+                "context": "_logs",
+                "functions": {
+                }
+            })
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
 
-            self.config["modules"]["_logs_stdout"] = EasyDict({'description': "Prints all incoming logs to STDOUT.", 'module': "wishbone.module.output.stdout", "arguments": {"colorize": self.colorize}, "context": "_logs", "functions": {}})
+            self.config["modules"]["_logs_stdout"] = EasyDict({
+                'description': "Prints all incoming logs to STDOUT.",
+                'module': "wishbone.module.output.stdout",
+                "arguments": {
+                    "colorize": self.colorize
+                },
+                "context": "_logs",
+                "functions": {
+                }
+            })
             self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")
 
     def _setupLoggingSYSLOG(self):
@@ -289,8 +332,8 @@ class ConfigFile(object):
                 "arguments": {
                     "ident": self.identification,
                     "message": "{data[module]}: {data[message]}"
-                    },
+                },
                 "context": "_logs",
                 "functions": {}
-        })
+            })
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")
