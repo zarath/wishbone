@@ -56,21 +56,19 @@ class BootStrap():
         start.add_argument('--pid', type=str, dest='pid', default='%s/wishbone.pid' % (os.getcwd()), help='The pidfile to use.')
         start.add_argument('--queue_size', type=int, dest='queue_size', default=100, help='The queue size to use.')
         start.add_argument('--frequency', type=int, dest='frequency', default=1, help='The metric frequency.')
-        start.add_argument('--syslog_id', type=str, dest='identification', default="wishbone", help='The application name in syslog.')
-        start.add_argument('--module_path', type=str, dest='module_path', default=None, help='A comma separated list of directories to search and find Wishbone modules.')
+        start.add_argument('--identification', type=str, dest='identification', default="wishbone", help='An identifier string for generated logs.')
+        start.add_argument('--nofork', action="store_true", default="False", help="When defined does not fork to background and INFO logs are written to STDOUT.")
 
-        debug = subparsers.add_parser('debug', description="Starts a Wishbone instance in foreground and writes logs to STDOUT.")
+        debug = subparsers.add_parser('debug', description="Starts a Wishbone instance in foreground and writes debug logs to STDOUT.")
         debug.add_argument('--config', type=str, dest='config', default='wishbone.cfg', help='The Wishbone bootstrap file to load.')
         debug.add_argument('--instances', type=int, dest='instances', default=1, help='The number of parallel Wishbone instances to bootstrap.')
         debug.add_argument('--queue_size', type=int, dest='queue_size', default=100, help='The queue size to use.')
         debug.add_argument('--frequency', type=int, dest='frequency', default=1, help='The metric frequency.')
-        debug.add_argument('--id', type=str, dest='identification', default=None, help='An identification string.')
-        debug.add_argument('--module_path', type=str, dest='module_path', default=None, help='A comma separated list of directories to search and find Wishbone modules.')
+        debug.add_argument('--identification', type=str, dest='identification', default="wishbone", help='An identifier string for generated logs.')
         debug.add_argument('--graph', action="store_true", help='When enabled starts a webserver on 8088 showing a graph of connected modules and queues.')
         debug.add_argument('--graph_include_sys', action="store_true", help='When enabled includes logs and metrics related queues modules and queues to graph layout.')
         debug.add_argument('--nocolor', action="store_true", help='When defined does not print colored output to stdout.')
-
-        debug.add_argument('--profile', action="store_true", help='When enabled profiles the process and dumps a profile file in the current directory. The profile file can be loaded in Chrome developer tools.')
+        debug.add_argument('--profile', action="store_true", help='When enabled profiles the process and dumps a Chrome developer tools profile file in the current directory.')
 
         stop = subparsers.add_parser('stop', description="Tries to gracefully stop the Wishbone instance.")
         stop.add_argument('--pid', type=str, dest='pid', default='wishbone.pid', help='The pidfile to use.')
@@ -104,20 +102,59 @@ class Dispatch():
         self.queue_size = kwargs.get("queue_size", None)
         self.frequency = kwargs.get("frequency", None)
         self.identification = kwargs.get("identification", None)
-        self.module_path = kwargs.get("module_path", None)
         self.graph = kwargs.get("graph", None)
         self.graph_include_sys = kwargs.get("graph_include_sys", None)
         self.profile = kwargs.get("profile", None)
         self.docs = kwargs.get("docs", None)
         self.code = kwargs.get("code", None)
         self.nocolor = kwargs.get("nocolor", False)
+        self.nofork = kwargs.get("nofork", None)
 
         self.routers = []
 
-        if self.module_path is not None:
-            self.__expandSearchPath(self.module_path)
+    def bootstrapBlock(self):
+        '''Helper function which blocks untill all running routers have stopped.
+        '''
 
-    def initializeRouter(self, config):
+        while True:
+            try:
+                for router in self.routers:
+                    router.join()
+                break
+            except KeyboardInterrupt:
+                pass
+
+    def debug(self):
+        '''Maps to the CLI command and starts Wishbone in foreground.
+        '''
+
+        colorize = not self.nocolor
+
+        router_config = ConfigFile(
+            filename=self.config,
+            logstyle='STDOUT',
+            loglevel=7,
+            colorize_stdout=colorize
+        )
+
+        config = router_config.dump()
+
+        self.initializeManyRouters(
+            config=config,
+            number=self.instances,
+            background=False
+        )
+
+    def generateHeader(self):
+        '''Generates the Wishbone ascii header.
+        '''
+
+        with open("%s/data/banner.tmpl" % (os.path.dirname(__file__))) as f:
+            template = ''.join(f.readlines()).format(version=get_distribution('wishbone').version)
+
+        return template
+
+    def initializeOneRouter(self, config):
         '''Initializes a Router instance using the provided config object.
 
         This function blocks until signal(2) is received after which it
@@ -145,7 +182,6 @@ class Dispatch():
             router.stop()
 
         e = Event()
-        # e.clear()
         signal(2, e.set)
 
         if self.profile:
@@ -155,51 +191,57 @@ class Dispatch():
         else:
             startRouter()
 
-    def bootstrapBlock(self):
-        '''Helper function which blocks untill all running routers have stopped.
+    def initializeManyRouters(self, config, number, background):
+
+        '''Initialize many routers and background if required
+
+        Args:
+            config (Wishbone.config.configfile:ConfigFile): The router configration
+            number (int): The number of instances to intialize
+            background (bool): Whether to background the routers or not
         '''
 
-        while True:
-            try:
-                for router in self.routers:
-                    router.join()
-                break
-            except KeyboardInterrupt:
-                pass
+        if background:
+            pid_file = PIDFile(self.pid)
+            with DaemonContext(stdout=sys.stdout, stderr=sys.stderr, detach_process=True):
+                if self.instances == 1:
+                    sys.stdout.write("\nWishbone instance started with pid %s\n" % (os.getpid()))
+                    sys.stdout.flush()
+                    pid_file.create([os.getpid()])
+                    self.initializeOneRouter(config)
+                else:
+                    for instance in range(self.instances):
+                        self.routers.append(
+                            gipc.start_process(
+                                self.initializeOneRouter,
+                                args=(config, ),
+                                daemon=True
+                            )
+                        )
 
-    def generateHeader(self):
-        '''Generates the Wishbone ascii header.
-        '''
+                    pids = [str(p.pid) for p in self.routers]
+                    print(("\nInstances started in foreground with pid %s\n" % (", ".join(pids))))
+                    pid_file.create(pids)
 
-        with open("%s/data/banner.tmpl" % (os.path.dirname(__file__))) as f:
-            template = ''.join(f.readlines()).format(version=get_distribution('wishbone').version)
-
-        return template
-
-    def debug(self):
-        '''Maps to the CLI command and starts Wishbone in foreground.
-        '''
-
-        colorize = not self.nocolor
-        router_config = ConfigFile(self.config, 'STDOUT', colorize=colorize).dump()
-
-        if self.instances == 1:
-            sys.stdout.write("\nInstance started in foreground with pid %s\n" % (os.getpid()))
-            self.initializeRouter(router_config)
-
+                self.bootstrapBlock()
         else:
-            for instance in range(self.instances):
-                self.routers.append(
-                    gipc.start_process(
-                        self.initializeRouter,
-                        args=(router_config, ),
-                        daemon=True
-                    )
-                )
+            if self.instances == 1:
+                sys.stdout.write("\nInstance started in foreground with pid %s\n" % (os.getpid()))
+                self.initializeOneRouter(config)
 
-            pids = [str(p.pid) for p in self.routers]
-            print(("\nInstances started in foreground with pid %s\n" % (", ".join(pids))))
-            self.bootstrapBlock()
+            else:
+                for instance in range(self.instances):
+                    self.routers.append(
+                        gipc.start_process(
+                            self.initializeOneRouter,
+                            args=(config, ),
+                            daemon=True
+                        )
+                    )
+
+                pids = [str(p.pid) for p in self.routers]
+                print(("\nInstances started in foreground with pid %s\n" % (", ".join(pids))))
+                self.bootstrapBlock()
 
     def list(self):
         '''Maps to the CLI command and lists all Wishbone entrypoint modules it can find.
@@ -257,30 +299,20 @@ class Dispatch():
         '''Maps to the CLI command and starts one or more Wishbone processes in background.
         '''
 
-        router_config = ConfigFile(self.config, 'SYSLOG', self.identification).dump()
-        pid_file = PIDFile(self.pid)
+        router_config = ConfigFile(
+            filename=self.config,
+            logstyle='SYSLOG',
+            loglevel=6,
+            identification=self.identification
+        )
+        config = router_config.dump()
 
-        with DaemonContext(stdout=sys.stdout, stderr=sys.stderr, detach_process=True):
-            if self.instances == 1:
-                sys.stdout.write("\nWishbone instance started with pid %s\n" % (os.getpid()))
-                sys.stdout.flush()
-                pid_file.create([os.getpid()])
-                self.initializeRouter(router_config)
-            else:
-                for instance in range(self.instances):
-                    self.routers.append(
-                        gipc.start_process(
-                            self.initializeRouter,
-                            args=(router_config, ),
-                            daemon=True
-                        )
-                    )
-
-                pids = [str(p.pid) for p in self.routers]
-                print(("\nInstances started in foreground with pid %s\n" % (", ".join(pids))))
-                pid_file.create(pids)
-
-            self.bootstrapBlock()
+        print(not self.nofork)
+        self.initializeManyRouters(
+            config=config,
+            number=self.instances,
+            background=(not self.nofork)
+        )
 
     def stop(self):
         '''Maps to the CLI command and stop the running Wishbone processes.
@@ -300,15 +332,12 @@ class Dispatch():
             print("")
             print(("Failed to stop instances.  Reason: %s" % (err)))
 
-    def __expandSearchPath(self, module_path):
-        for d in module_path.split(','):
-            sys.path.append(d.strip())
-
 
 def main():
     try:
         BootStrap()
     except Exception as err:
+        raise
         print(("Failed to bootstrap instance.  Reason: %s" % (err)))
 
 

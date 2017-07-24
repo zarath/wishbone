@@ -281,6 +281,11 @@ class Actor(object):
                 continue
 
             event = self.__applyFunctions(queue, event)
+
+            if event is None:
+                # This event has been destroyed on purpose by a function.
+                continue
+
             self.current_event = event
 
             try:

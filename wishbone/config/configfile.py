@@ -127,10 +127,22 @@ SCHEMA = {
 
 class ConfigFile(object):
 
-    def __init__(self, filename, logstyle, identification="wishbone", colorize=True):
+    '''Generates a wishbone.router configuration object used to initialize a
+    wishbone router object.
+
+    Args:
+        filename (str): The filename of the configuration to load.
+        logstyle (str): How logging should be setup. Possible options are: stdout and syslog.
+        loglevel (str): The loglevel for the router to use to use.
+        identification (str): A string which identifies the router instance
+        colorize_stdout (bool): When True, colors each stdout printed logline using proper coloring.
+    '''
+
+    def __init__(self, filename, logstyle, loglevel=6, identification="wishbone", colorize_stdout=True):
         self.identification = identification
-        self.colorize = colorize
+        self.colorize_stdout = colorize_stdout
         self.logstyle = logstyle
+        self.loglevel = loglevel
         self.config = EasyDict({
             "lookups": EasyDict({}),
             "modules": EasyDict({}),
@@ -298,15 +310,27 @@ class ConfigFile(object):
 
     def _setupLoggingSTDOUT(self):
 
+        self.addFunction(
+            name="loglevelfilter",
+            function="wishbone.function.process.loglevel_filter",
+            arguments={
+                "max_loglevel": self.loglevel
+            }
+        )
+
+        # This is the ideal place to drop logs based on their loglevel since all logs come through
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_format"] = EasyDict({
                 "description": "Create a human readable log format.",
                 "module": "wishbone.module.process.humanlogformat",
                 "arguments": {
-                    "colorize": self.colorize
+                    "colorize": self.colorize_stdout
                 },
                 "context": "_logs",
                 "functions": {
+                    "inbox": [
+                        "loglevelfilter"
+                    ]
                 }
             })
             self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
@@ -315,7 +339,7 @@ class ConfigFile(object):
                 'description': "Prints all incoming logs to STDOUT.",
                 'module': "wishbone.module.output.stdout",
                 "arguments": {
-                    "colorize": self.colorize
+                    "colorize": self.colorize_stdout
                 },
                 "context": "_logs",
                 "functions": {
@@ -325,6 +349,15 @@ class ConfigFile(object):
 
     def _setupLoggingSYSLOG(self):
 
+        self.addFunction(
+            name="loglevelfilter",
+            function="wishbone.function.process.loglevel_filter",
+            arguments={
+                "max_loglevel": self.loglevel
+            }
+        )
+
+        # This is the ideal place to drop logs based on their loglevel since all logs come through
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_syslog"] = EasyDict({
                 'description': "Writes all incoming messags to syslog.",
@@ -334,6 +367,10 @@ class ConfigFile(object):
                     "message": "{data[module]}: {data[message]}"
                 },
                 "context": "_logs",
-                "functions": {}
+                "functions": {
+                    "inbox": [
+                        "loglevelfilter"
+                    ]
+                }
             })
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")

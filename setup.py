@@ -149,7 +149,8 @@ setup(
         ],
         'wishbone.function.process': [
             'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
-            'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper'
+            'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper',
+            'loglevel_filter = wishbone.function.loglevel_filter:logLevelFilter'
         ],
         'wishbone.lookup.internal': [
             'choice = wishbone.lookup.choice:Choice',
