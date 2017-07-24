@@ -57,7 +57,7 @@ class BootStrap():
         start.add_argument('--queue_size', type=int, dest='queue_size', default=100, help='The queue size to use.')
         start.add_argument('--frequency', type=int, dest='frequency', default=1, help='The metric frequency.')
         start.add_argument('--identification', type=str, dest='identification', default="wishbone", help='An identifier string for generated logs.')
-        start.add_argument('--nofork', action="store_true", default="False", help="When defined does not fork to background and INFO logs are written to STDOUT.")
+        start.add_argument('--nofork', action="store_true", default=False, help="When defined does not fork to background and INFO logs are written to STDOUT.")
 
         debug = subparsers.add_parser('debug', description="Starts a Wishbone instance in foreground and writes debug logs to STDOUT.")
         debug.add_argument('--config', type=str, dest='config', default='wishbone.cfg', help='The Wishbone bootstrap file to load.')
@@ -109,7 +109,6 @@ class Dispatch():
         self.code = kwargs.get("code", None)
         self.nocolor = kwargs.get("nocolor", False)
         self.nofork = kwargs.get("nofork", None)
-
         self.routers = []
 
     def bootstrapBlock(self):
@@ -307,11 +306,10 @@ class Dispatch():
         )
         config = router_config.dump()
 
-        print(not self.nofork)
         self.initializeManyRouters(
             config=config,
             number=self.instances,
-            background=(not self.nofork)
+            background=not self.nofork
         )
 
     def stop(self):
