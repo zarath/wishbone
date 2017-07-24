@@ -255,7 +255,6 @@ class GraphWebserver():
         self.js_data = VisJSData()
 
         for c in self.config["routingtable"]:
-            if self.__include(include_sys, self.config["modules"][c.source_module]["context"], self.config["modules"][c.destination_module]["context"]):
                 self.js_data.addModule(instance_name=c.source_module,
                                        module_name=self.config["modules"][c.source_module]["module"],
                                        description=self.module_pool.getModule(c.source_module).description)
@@ -267,15 +266,6 @@ class GraphWebserver():
                 self.js_data.addQueue(c.source_module, c.source_queue)
                 self.js_data.addQueue(c.destination_module, c.destination_queue)
                 self.js_data.addEdge("%s.%s" % (c.source_module, c.source_queue), "%s.%s" % (c.destination_module, c.destination_queue))
-
-    def __include(self, include_sys, source_module_context, destination_module_context):
-
-        if include_sys:
-            return True
-        elif source_module_context not in ["_logs", "_metrics"] and destination_module_context not in ["_logs", "_metrics"]:
-            return True
-        else:
-            return False
 
     def start(self):
 

@@ -154,7 +154,7 @@ class ConfigFile(object):
         self.__addMetricFunnel()
         self.load(filename)
 
-    def addModule(self, name, module, arguments={}, description="", context="configfile", functions={}, confirmation_modules=[], protocol=None):
+    def addModule(self, name, module, arguments={}, description="", functions={}, confirmation_modules=[], protocol=None):
 
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
@@ -172,12 +172,11 @@ class ConfigFile(object):
                 'description': description,
                 'module': module,
                 'arguments': arguments,
-                'context': context,
                 'functions': functions,
                 'confirmation_modules': confirmation_modules,
                 'protocol': protocol})
-            self.addConnection(name, "logs", "_logs", name, context="_logs")
-            self.addConnection(name, "metrics", "_metrics", name, context="_metrics")
+            self.addConnection(name, "logs", "_logs", name)
+            self.addConnection(name, "metrics", "_metrics", name)
 
         else:
             raise Exception("Module instance name '%s' is already taken." % (name))
@@ -200,12 +199,19 @@ class ConfigFile(object):
 
         self.config["protocols"][name] = EasyDict({"protocol": protocol, "arguments": arguments, "event": event})
 
-    def addConnection(self, source_module, source_queue, destination_module, destination_queue, context="configfile"):
+    def addConnection(self, source_module, source_queue, destination_module, destination_queue):
 
         connected = self.__queueConnected(source_module, source_queue)
 
         if not connected:
-            self.config["routingtable"].append(EasyDict({"source_module": source_module, "source_queue": source_queue, "destination_module": destination_module, "destination_queue": destination_queue, "context": context}))
+            self.config["routingtable"].append(
+                EasyDict({
+                    "source_module": source_module,
+                    "source_queue": source_queue,
+                    "destination_module": destination_module,
+                    "destination_queue": destination_queue
+                })
+            )
         else:
             raise Exception("Cannot connect '%s.%s' to '%s.%s'. Reason: %s." % (source_module, source_queue, destination_module, destination_queue, connected))
 
@@ -291,7 +297,6 @@ class ConfigFile(object):
             'module': "wishbone.module.flow.funnel",
             "arguments": {
             },
-            "context": "_logs",
             "functions": {
             }
         })
@@ -303,7 +308,6 @@ class ConfigFile(object):
             'module': "wishbone.module.flow.funnel",
             "arguments": {
             },
-            "context": "_metrics",
             "functions": {
             }
         })
@@ -326,14 +330,13 @@ class ConfigFile(object):
                 "arguments": {
                     "colorize": self.colorize_stdout
                 },
-                "context": "_logs",
                 "functions": {
                     "inbox": [
                         "loglevelfilter"
                     ]
                 }
             })
-            self.addConnection("_logs", "outbox", "_logs_format", "inbox", context="_logs")
+            self.addConnection("_logs", "outbox", "_logs_format", "inbox")
 
             self.config["modules"]["_logs_stdout"] = EasyDict({
                 'description': "Prints all incoming logs to STDOUT.",
@@ -341,11 +344,10 @@ class ConfigFile(object):
                 "arguments": {
                     "colorize": self.colorize_stdout
                 },
-                "context": "_logs",
                 "functions": {
                 }
             })
-            self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox", context="_logs")
+            self.addConnection("_logs_format", "outbox", "_logs_stdout", "inbox")
 
     def _setupLoggingSYSLOG(self):
 
@@ -366,11 +368,10 @@ class ConfigFile(object):
                     "ident": self.identification,
                     "message": "{data[module]}: {data[message]}"
                 },
-                "context": "_logs",
                 "functions": {
                     "inbox": [
                         "loglevelfilter"
                     ]
                 }
             })
-            self.addConnection("_logs", "outbox", "_logs_syslog", "inbox", context="_logs")
+            self.addConnection("_logs", "outbox", "_logs_syslog", "inbox")

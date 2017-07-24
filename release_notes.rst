@@ -20,6 +20,7 @@ Features:
 - Added support for Event.format
 - Added support for jinja2 templating for user provided variables
 - Wishbone logs are now simple dicts
+- Removed confusing context property from module instances.
 
 Bugfixes:
 
