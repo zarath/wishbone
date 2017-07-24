@@ -75,5 +75,4 @@ class Cron(InputModule):
                     e = self.generateEvent({})
                     e.set(payload, self.kwargs.field)
                     self.submit(e, self.pool.queue.outbox)
-                    e.getConfirmation()
             sleep(60)

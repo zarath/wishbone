@@ -142,7 +142,6 @@ class WBInotify(InputModule):
                         for payload in self.decode(p):
                             e = self.generateEvent({"path": os.path.abspath(payload), "inotify_type": "WISHBONE_INIT"})
                             self.pool.queue.outbox.put(e)
-                            e.getConfirmation()
                 try:
                     for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
                         for payload in self.decode(abs_path):

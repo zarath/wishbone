@@ -68,6 +68,5 @@ class TestEvent(InputModule):
                 event = self.generateEvent(payload)
                 event.set(payload, self.kwargs.destination)
                 self.submit(event, self.pool.queue.outbox)
-                event.getConfirmation()
                 sleep(self.kwargs.interval)
         self.logging.info("Stopped producing events.")

@@ -306,21 +306,13 @@ class Actor(object):
             else:
                 self.submit(event, self.pool.queue.success)
 
-            if isinstance(event, Bulk):
-                for e in event.dump():
-                    if self.name in e.confirmation_modules:
-                        e.confirm()
-            else:
-                if self.name in event.confirmation_modules:
-                    event.confirm()
-
     def __generateEventWithPayload(self, data={}):
 
         '''
         Generates a new event with payload <data>.
         '''
 
-        return Wishbone_Event(data, confirmation_modules=self.config.confirmation_modules)
+        return Wishbone_Event(data)
 
     def __generateEvent(self, data={}):
 
@@ -329,7 +321,7 @@ class Actor(object):
         metadata fields too.
         '''
 
-        e = Wishbone_Event(confirmation_modules=self.config.confirmation_modules)
+        e = Wishbone_Event()
         e.slurp(data)
         return e
 

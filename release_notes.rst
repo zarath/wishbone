@@ -11,8 +11,6 @@ Features:
 - Added --nocolorize switch to debug command.
 - Added nocolor support to wishbone.output.stdout
 - Added nocolor support to wishbone.encode.humanlogformat
-- Provided mechanics to signal an module another module has successfully
-  processed the event (confirmation_modules).
 - Added support for module functions.
 - Removed wishbone.encode and decode modules and replace by equivalent functions.
 - Reworked wishbone.module.input.testevent

@@ -135,7 +135,7 @@ class Event(object):
     module to the other.
     '''
 
-    def __init__(self, data=None, confirmation_modules=[], uuid=True, ttl=254):
+    def __init__(self, data=None, uuid=True, ttl=254):
 
         self.data = {
             "timestamp": time.time(),
@@ -149,33 +149,8 @@ class Event(object):
             "ttl": ttl
         }
 
-        self.confirmation_modules = confirmation_modules
-        if confirmation_modules != []:
-            self.__confirm = Gevent_Event()
-            self.__confirm.clear()
-            self.getConfirmation = self.__getConfirmation
-            self.config = self.__confirm
-        else:
-            self.getConfirmation = self.__dummy
-            self.confirm = self.__dummy
-
         if uuid:
             self.data["uuid"] = str(uuid4())
-
-    def __getConfirmation(self):
-        '''
-        Blocks util the <confirm> method has been called by the intended upstream
-        module.
-        '''
-
-        self.__confirm.wait()
-
-    def __confirm(self):
-        '''
-        Unblocks the caller calling the <getConfirmation> method
-        '''
-
-        self.__confirm.set()
 
     def __dummy(self):
 

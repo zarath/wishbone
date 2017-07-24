@@ -106,9 +106,6 @@ SCHEMA = {
                         },
                         "functions": {
                             "type": "object"
-                        },
-                        "confirmation_modules": {
-                            "type": "array"
                         }
                     },
                     "required": ["module"],
@@ -154,7 +151,7 @@ class ConfigFile(object):
         self.__addMetricFunnel()
         self.load(filename)
 
-    def addModule(self, name, module, arguments={}, description="", functions={}, confirmation_modules=[], protocol=None):
+    def addModule(self, name, module, arguments={}, description="", functions={}, protocol=None):
 
         if name.startswith('_'):
             raise Exception("Module instance names cannot start with _.")
@@ -173,7 +170,6 @@ class ConfigFile(object):
                 'module': module,
                 'arguments': arguments,
                 'functions': functions,
-                'confirmation_modules': confirmation_modules,
                 'protocol': protocol})
             self.addConnection(name, "logs", "_logs", name)
             self.addConnection(name, "metrics", "_metrics", name)
