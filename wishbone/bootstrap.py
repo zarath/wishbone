@@ -298,9 +298,14 @@ class Dispatch():
         '''Maps to the CLI command and starts one or more Wishbone processes in background.
         '''
 
+        if self.nofork:
+            logstyle = "STDOUT"
+        else:
+            logstyle = "SYSLOG"
+
         router_config = ConfigFile(
             filename=self.config,
-            logstyle='SYSLOG',
+            logstyle=logstyle,
             loglevel=6,
             identification=self.identification
         )
