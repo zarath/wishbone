@@ -44,7 +44,8 @@ install_requires = [
     'jsonschema',
     'msgpack-python',
     'easydict',
-    'jinja2'
+    'jinja2',
+    'pygments'
 ]
 
 dependency_links = [
