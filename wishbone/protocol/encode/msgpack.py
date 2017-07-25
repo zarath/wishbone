@@ -28,6 +28,16 @@ from msgpack import dumps
 
 class MSGPack(Encode):
 
+    '''**Encode data into msgpack format.**
+
+    Convert a Python datastructure into msgpack format.
+
+    Parameters:
+
+        n/a
+
+    '''
+
     def __init__(self):
         pass
 

@@ -28,6 +28,23 @@ from json import dumps
 
 class JSON(Encode):
 
+    '''**Encode data into JSON format.**
+
+    Convert a Python datastructure into JSON format.
+
+    Parameters:
+
+        - sort_keys(bool)(False)
+            |  Sorts keys when True
+
+        - ensure_ascii(bool)(False)
+            |  When True makes sure all chars are valid ascii
+
+        - ident(int)(None)
+            |  The indentation used.
+
+    '''
+
     def __init__(self, sort_keys=False, ensure_ascii=False, indent=None):
         self.sort_keys = sort_keys
         self.ensure_ascii = ensure_ascii
