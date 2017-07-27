@@ -46,6 +46,7 @@ class ActorConfig(object):
 
     def __init__(self, name, size=100, frequency=1, lookups={}, description="A Wishbone actor.", functions={},
                  protocol_name=None, protocol_function=None, protocol_event=False,
+                 identification="wishbone",
                  disable_exception_handling=False):
 
         '''
@@ -59,6 +60,7 @@ class ActorConfig(object):
             protocol_name (str): A protocol decode or encode component name.
             protocol_function (func): The protocol function to apply
             protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
+            identification (str): A value to pass to the logging object identifying the wishbone instance.
             disable_exception_handling (bool): If True, exception handling is disabled. Usefull for testing
         '''
         self.name = name
@@ -70,4 +72,5 @@ class ActorConfig(object):
         self.protocol_name = protocol_name
         self.protocol_function = protocol_function
         self.protocol_event = protocol_event
+        self.identification = identification
         self.disable_exception_handling = disable_exception_handling

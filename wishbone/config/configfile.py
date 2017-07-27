@@ -171,8 +171,8 @@ class ConfigFile(object):
                 'arguments': arguments,
                 'functions': functions,
                 'protocol': protocol})
-            self.addConnection(name, "logs", "_logs", name)
-            self.addConnection(name, "metrics", "_metrics", name)
+            self.addConnection(name, "logs", "_logs", "_%s" % (name))
+            self.addConnection(name, "metrics", "_metrics", "_%s" % (name))
 
         else:
             raise Exception("Module instance name '%s' is already taken." % (name))
@@ -310,15 +310,6 @@ class ConfigFile(object):
 
     def _setupLoggingSTDOUT(self):
 
-        self.addFunction(
-            name="loglevelfilter",
-            function="wishbone.function.process.loglevel_filter",
-            arguments={
-                "max_loglevel": self.loglevel
-            }
-        )
-
-        # This is the ideal place to drop logs based on their loglevel since all logs come through
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_format"] = EasyDict({
                 "description": "Create a human readable log format.",
@@ -327,9 +318,6 @@ class ConfigFile(object):
                     "colorize": self.colorize_stdout
                 },
                 "functions": {
-                    "inbox": [
-                        "loglevelfilter"
-                    ]
                 }
             })
             self.addConnection("_logs", "outbox", "_logs_format", "inbox")
@@ -347,15 +335,6 @@ class ConfigFile(object):
 
     def _setupLoggingSYSLOG(self):
 
-        self.addFunction(
-            name="loglevelfilter",
-            function="wishbone.function.process.loglevel_filter",
-            arguments={
-                "max_loglevel": self.loglevel
-            }
-        )
-
-        # This is the ideal place to drop logs based on their loglevel since all logs come through
         if not self.__queueConnected("_logs", "outbox"):
             self.config["modules"]["_logs_syslog"] = EasyDict({
                 'description': "Writes all incoming messags to syslog.",
@@ -365,9 +344,6 @@ class ConfigFile(object):
                     "message": "{data[module]}: {data[message]}"
                 },
                 "functions": {
-                    "inbox": [
-                        "loglevelfilter"
-                    ]
                 }
             })
             self.addConnection("_logs", "outbox", "_logs_syslog", "inbox")

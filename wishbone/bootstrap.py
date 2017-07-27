@@ -114,7 +114,6 @@ class Dispatch():
     def bootstrapBlock(self):
         '''Helper function which blocks untill all running routers have stopped.
         '''
-
         while True:
             try:
                 for router in self.routers:
@@ -133,7 +132,8 @@ class Dispatch():
             filename=self.config,
             logstyle='STDOUT',
             loglevel=7,
-            colorize_stdout=colorize
+            colorize_stdout=colorize,
+            identification=self.identification
         )
 
         config = router_config.dump()
@@ -177,9 +177,10 @@ class Dispatch():
             )
 
             router.start()
-            e.wait()
-            router.stop()
 
+            e.wait()
+
+            router.stop()
         e = Event()
         signal(2, e.set)
 
@@ -227,7 +228,6 @@ class Dispatch():
             if self.instances == 1:
                 sys.stdout.write("\nInstance started in foreground with pid %s\n" % (os.getpid()))
                 self.initializeOneRouter(config)
-
             else:
                 for instance in range(self.instances):
                     self.routers.append(

@@ -58,7 +58,11 @@ class Actor(object):
 
         self.pool = QueuePool(config.size)
 
-        self.logging = Logging(config.name, self.pool.queue.logs)
+        self.logging = Logging(
+            name=config.name,
+            q=self.pool.queue.logs,
+            identification=self.config.identification
+        )
 
         self.__loop = True
         self.greenlets = Greenlets([], [], [], [])
@@ -76,7 +80,6 @@ class Actor(object):
 
         self.stopped = True
 
-        self.__current_event = {}
         self.raw_kwargs = {}
         self.template_kwargs = {}
         self.kwargs = EasyDict({})
@@ -153,7 +156,7 @@ class Actor(object):
         if event is None:
             for name, template in self.template_kwargs.items():
                 try:
-                    self.kwargs[name] = template.render(self.__current_event)
+                    self.kwargs[name] = template.render(event.dump(complete=True))
                 except Exception as err:
                     self.kwargs[name] = self.raw_kwargs[name]
                     self.logging.debug("Problem rendering template. Reason: %s" % (err))
@@ -271,23 +274,26 @@ class Actor(object):
         self.logging.debug("Function '%s' has been registered to consume queue '%s'" % (function.__name__, queue))
 
         while self.loop():
-            event = self.pool.queue.__dict__[queue].get()
-            self.__current_event = event.dump(complete=True)
-            self.renderKwargs()
+
+            event = self.pool.getQueue(queue).get()
+
+            # Validate TTL
             try:
                 event.decrementTTL()
             except TTLExpired as err:
                 self.logging.warning("Event with UUID %s dropped. Reason: %s" % (event.get("uuid"), err))
                 continue
 
+            # Set the current event uuid to the logger object
+            self.logging.setCurrentEventID(event.get("uuid"))
+
+            # Render kwargs using the current event values
+            self.renderKwargs(event)
+
+            # Apply all the defined queue functions to the event
             event = self.__applyFunctions(queue, event)
 
-            if event is None:
-                # This event has been destroyed on purpose by a function.
-                continue
-
-            self.current_event = event
-
+            # Apply consumer function
             try:
                 function(event)
             except Exception as err:
@@ -305,6 +311,9 @@ class Actor(object):
                 self.submit(event, self.pool.queue.failed)
             else:
                 self.submit(event, self.pool.queue.success)
+            finally:
+                # Unset the current event uuid to the logger object
+                self.logging.setCurrentEventID(None)
 
     def __generateEventWithPayload(self, data={}):
 

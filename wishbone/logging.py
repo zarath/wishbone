@@ -58,14 +58,25 @@ class Logging():
     definition.
     '''
 
-    def __init__(self, name, q):
+    def __init__(self, name, q, identification=None):
         self.name = name
         self.logs = q
+        self.identification = identification
         self.__queue_full_message = False
+        self.__event_id = None
 
     def __log(self, level, message):
 
-        event = Event({"time": time(), "level": level, "pid": getpid(), "module": self.name, "message": message})
+        event = Event({
+            "time": time(),
+            "identification": self.identification,
+            "event_id": self.__event_id,
+            "level": level,
+            "pid": getpid(),
+            "module": self.name,
+            "message": message
+        })
+
         try:
             self.logs.put(event)
         except QueueFull:
@@ -73,13 +84,6 @@ class Logging():
                 print("Log queue full for module '%s'. Dropping messages" % (self.name))
             else:
                 self.__queue_full_message = True
-
-    def emergency(self, message, *args, **kwargs):
-        """Generates a log message with priority emergency(0).
-        """
-        self.__log(0, message)
-    emerg = emergency
-    exception = emergency
 
     def alert(self, message, *args, **kwargs):
         """Generates a log message with priority alert(1).
@@ -92,22 +96,23 @@ class Logging():
         self.__log(2, message)
     crit = critical
 
+    def debug(self, message, *args, **kwargs):
+        """Generates a log message with priority debug(7).
+        """
+        self.__log(7, message)
+
+    def emergency(self, message, *args, **kwargs):
+        """Generates a log message with priority emergency(0).
+        """
+        self.__log(0, message)
+    emerg = emergency
+    exception = emergency
+
     def error(self, message, *args, **kwargs):
         """Generates a log message with priority error(3).
         """
         self.__log(3, message, *args, **kwargs)
     err = error
-
-    def warning(self, message, *args, **kwargs):
-        """Generates a log message with priority warning(4).
-        """
-        self.__log(4, message, *args, **kwargs)
-    warn = warning
-
-    def notice(self, message, *args, **kwargs):
-        """Generates a log message with priority notice(5).
-        """
-        self.__log(5, message)
 
     def informational(self, message, *args, **kwargs):
         """Generates a log message with priority informational(6).
@@ -115,7 +120,18 @@ class Logging():
         self.__log(6, message)
     info = informational
 
-    def debug(self, message, *args, **kwargs):
-        """Generates a log message with priority debug(7).
+    def notice(self, message, *args, **kwargs):
+        """Generates a log message with priority notice(5).
         """
-        self.__log(7, message)
+        self.__log(5, message)
+
+    def setCurrentEventID(self, event_id):
+
+        self.__event_id = event_id
+
+    def warning(self, message, *args, **kwargs):
+        """Generates a log message with priority warning(4).
+        """
+        self.__log(4, message, *args, **kwargs)
+    warn = warning
+

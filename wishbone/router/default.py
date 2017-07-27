@@ -221,6 +221,7 @@ class Default(object):
                 lookups=lookups,
                 description=instance.description,
                 functions=module_functions,
+                identification=self.identification,
                 protocol_name=protocol_name,
                 protocol_function=protocol_function,
                 protocol_event=protocol_event
