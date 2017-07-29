@@ -146,12 +146,10 @@ setup(
         ],
         'wishbone.function.modify': [
             'set = wishbone.function.modify_set:modifySetWrapper',
-            'append = wishbone.function.modify_append:modifyAppendWrapper'
-        ],
-        'wishbone.function.process': [
-            'uppercase = wishbone.function.process_uppercase:processUppercaseWrapper',
-            'lowercase = wishbone.function.process_lowercase:processLowercaseWrapper',
-            'loglevel_filter = wishbone.function.loglevel_filter:logLevelFilter'
+            'append = wishbone.function.modify_append:modifyAppendWrapper',
+            'uppercase = wishbone.function.modify_uppercase:modifyUppercaseWrapper',
+            'lowercase = wishbone.function.modify_lowercase:modifyLowercaseWrapper',
+
         ],
         'wishbone.lookup.internal': [
             'choice = wishbone.lookup.choice:Choice',
