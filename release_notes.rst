@@ -19,6 +19,9 @@ Features:
 - Added support for jinja2 templating for user provided variables
 - Wishbone logs are now simple dicts
 - Removed confusing context property from module instances.
+- Removed Metric() and Log() type and replaced by simple dicts
+- Removed getting metrics from builtin webserver
+
 
 Bugfixes:
 
