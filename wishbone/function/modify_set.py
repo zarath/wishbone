@@ -26,9 +26,9 @@
 def modifySetWrapper(data, destination='data'):
 
     '''
-    **Adds data to the desired field.**
+    **Sets a field to the desired value.**
 
-    Adds the provided <data> to <destination>.
+    Sets <data> to field <destination>.
     <data> can be a dynamic value.
 
     Parameters:
