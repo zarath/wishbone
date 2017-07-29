@@ -25,7 +25,6 @@
 from wishbone.queue import QueuePool
 from wishbone.logging import Logging
 from wishbone.event import Event as Wishbone_Event
-from wishbone.event import Metric
 from wishbone.event import Bulk
 from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule, TTLExpired
 from wishbone.moduletype import ModuleType
@@ -132,14 +131,15 @@ class Actor(object):
         while self.loop():
             for queue in self.pool.listQueues(names=True):
                 for metric, value in list(self.pool.getQueue(queue).stats().items()):
-                    metric = Metric(time=time(),
-                                    type="wishbone",
-                                    source=hostname,
-                                    name="module.%s.queue.%s.%s" % (self.name, queue, metric),
-                                    value=value,
-                                    unit="",
-                                    tags=())
-                    event = Wishbone_Event(metric)
+                    event = Wishbone_Event({
+                        "time": time(),
+                        "type": "wishbone",
+                        "source": hostname,
+                        "name": "module.%s.queue.%s.%s" % (self.name, queue, metric),
+                        "value": value,
+                        "unit": "",
+                        "tags": ()
+                    })
                     self.submit(event, self.pool.queue.metrics)
             sleep(self.frequency)
 

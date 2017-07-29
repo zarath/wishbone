@@ -129,35 +129,6 @@ class Bulk(object):
             return org
 
 
-class Metric(object):
-
-    '''
-    A Wishbone metric object
-    '''
-
-    def __init__(self, time, type, source, name, value, unit, tags):
-
-        self.time = time
-        self.type = type
-        self.source = source
-        self.name = name
-        self.value = value
-        self.unit = unit
-        self.tags = tags
-
-    def __str__(self):
-
-        return "Metric(%s)" % (self.__dict__)
-
-    def __repr__(self):
-
-        return "Metric(%s)" % (self.__dict__)
-
-    def dump(self):
-
-        return self.__dict__
-
-
 class Event(object):
 
     '''
