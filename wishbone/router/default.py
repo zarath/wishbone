@@ -284,31 +284,10 @@ class GraphWebserver():
 
         return self.__block
 
-    def getMetrics(self):
-
-        def getConnectedModuleQueue(m, q):
-            for c in self.config["routingtable"]:
-                if c.source_module == m and c.source_queue == q:
-                    return (c.destination_module, c.destination_queue)
-            return (None, None)
-
-        d = {"module": {}}
-        for module in self.module_pool.list():
-            d["module"][module.name] = {}
-            for queue in module.pool.listQueues(names=True):
-                d["module"][module.name]["queue"] = {queue: {"metrics": module.pool.getQueue(queue).stats()}}
-                (dest_mod, dest_q) = getConnectedModuleQueue(module.name, queue)
-                if dest_mod is not None and dest_q is not None:
-                    d["module"][module.name]["queue"] = {queue: {"connection": {"module": dest_mod, "queue": dest_q}}}
-        return json.dumps(d)
-
     def application(self, env, start_response):
         if env['PATH_INFO'] == '/':
             start_response('200 OK', [('Content-Type', 'text/html')])
             return[GRAPHCONTENT % (self.js_data.dumpString()[0], self.js_data.dumpString()[1])]
-        elif env['PATH_INFO'] == '/metrics':
-            start_response('200 OK', [('Content-Type', 'text/html')])
-            return[self.getMetrics()]
         else:
             start_response('404 Not Found', [('Content-Type', 'text/html')])
             return [b'<h1>Not Found</h1>']
