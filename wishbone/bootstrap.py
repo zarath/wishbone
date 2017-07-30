@@ -76,7 +76,7 @@ class BootStrap():
         kill = subparsers.add_parser('kill', description="Kills the Wishbone processes immediately.")
         kill.add_argument('--pid', type=str, dest='pid', default='wishbone.pid', help='The pidfile to use.')
 
-        subparsers.add_parser('list', description="Lists the available Wishbone modules and lookup.")
+        subparsers.add_parser('list', description="Lists the available Wishbone modules.")
 
         show = subparsers.add_parser('show', description="Shows information about a component.")
         show_group = show.add_mutually_exclusive_group(required=True)
@@ -340,7 +340,6 @@ def main():
     try:
         BootStrap()
     except Exception as err:
-        raise
         print(("Failed to bootstrap instance.  Reason: %s" % (err)))
 
 
