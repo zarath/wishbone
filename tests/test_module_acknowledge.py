@@ -26,7 +26,6 @@ from wishbone.event import Event
 from wishbone.module.acknowledge import Acknowledge
 from wishbone.actor import ActorConfig
 from wishbone.utils.test import getter
-from uplook import UpLook
 from wishbone.lookup import EventLookup
 
 

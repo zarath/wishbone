@@ -88,7 +88,7 @@ class HumanLogFormat(ProcessModule):
             7: "\x1B[1;37m"
         }
 
-        if self.kwargs.colorize:
+        if self.kwargs.get("colorize"):
             self.colorize = self.doColorize
         else:
             self.colorize = self.doNoColorize
@@ -97,8 +97,10 @@ class HumanLogFormat(ProcessModule):
         self.pool.createQueue("outbox")
         self.registerConsumer(self.consume, "inbox")
 
-        if self.kwargs.ident is None:
-            self.kwargs.ident = os.path.basename(sys.argv[0])
+        if self.kwargs.get("ident") is None:
+            self.ident = os.path.basename(sys.argv[0])
+        else:
+            self.ident = self.kwargs.get("ident")
 
     def consume(self, event):
 
@@ -107,7 +109,7 @@ class HumanLogFormat(ProcessModule):
         if all([True if item in data.keys() else False for item in ["time", "pid", "level", "module", "message"]]):
             log = ("%s %s %s %s: %s" % (
                 strftime("%Y-%m-%dT%H:%M:%S", localtime(data["time"])),
-                "%s[%s]:" % (self.kwargs.ident, data["pid"]),
+                "%s[%s]:" % (self.ident, data["pid"]),
                 self.levels[data["level"]],
                 data["module"],
                 data["message"]))

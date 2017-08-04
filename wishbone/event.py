@@ -27,6 +27,17 @@ import time
 from wishbone.error import BulkFull, InvalidData, InvalidEventFormat, TTLExpired
 from gevent.event import Event as Gevent_Event
 from uuid import uuid4
+from jinja2 import Template
+from jinja2 import Undefined
+
+
+class SilentUndefined(Undefined):
+    '''
+    Dont break pageloads because vars arent there!
+    '''
+    def _fail_with_undefined_error(self, *args, **kwargs):
+        return None
+
 
 EVENT_RESERVED = ["timestamp", "version", "data", "tmp", "errors", "uuid"]
 
@@ -143,7 +154,7 @@ class Event(object):
         self.data = {
             "timestamp": time.time(),
             "version": 1,
-            "data": data,
+            "data": None,
             "tmp": {
             },
             "errors": {
@@ -151,6 +162,7 @@ class Event(object):
             "tags": [],
             "ttl": ttl
         }
+        self.set(data)
 
         if uuid:
             self.data["uuid"] = str(uuid4())
@@ -275,20 +287,21 @@ class Event(object):
         '''
         Returns a formatted string using the provided template and key
 
-        :param str template: The template to apply
+        :param str jinja2.Template: The template to apply
         :param str key: The name of key providing the values for the template
         :return: The completed template
         :rtype: str
         '''
 
         try:
-            return template.format(**self.get(key))
+            return template.render(**self.get(key))
         except Exception:
             return template
 
     def get(self, key="data"):
         '''
         Returns the value of <key>.
+
 
         :param str key: The name of the key to read.
         :return: The value of <key>
@@ -308,8 +321,9 @@ class Event(object):
         else:
             try:
                 path = key.split('.')
-                return travel(path, self.data)
-            except:
+                data = travel(path, self.data)
+                return data
+            except Exception:
                 raise KeyError(key)
 
     def has(self, key="data"):
@@ -334,7 +348,6 @@ class Event(object):
         :param value: The value to set.
         :param str key: The name of the key to assign <value> to.
         '''
-
         result = value
         for name in reversed(key.split('.')):
             result = {name: result}
@@ -373,3 +386,16 @@ class Event(object):
             self.data["timestamp"] = time.time()
 
     raw = dump
+
+    def insertTemplates(self, data):
+
+        if isinstance(data, str):
+            return Template(data, undefined=SilentUndefined)
+        elif isinstance(data, dict):
+            for key, value in data.items():
+                data[key] = self.insertTemplates(value)
+        elif isinstance(data, list):
+            for index, value in enumerate(data):
+                data[index] = value
+
+        return data

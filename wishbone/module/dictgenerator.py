@@ -79,12 +79,12 @@ class DictGenerator(InputModule):
 
         self.key_number = -1
 
-        if self.kwargs.randomize_keys:
+        if self.kwargs.get('randomize_keys'):
             self.generateKey = self.pickWord
         else:
             self.generateKey = self.generateKeyNumber
 
-        if self.kwargs.num_values:
+        if self.kwargs.get('num_values'):
             self.generateValue = self.generateValueInteger
         else:
             self.generateValue = self.pickWord
@@ -98,7 +98,7 @@ class DictGenerator(InputModule):
 
     def preHook(self):
 
-        if self.kwargs.keys != []:
+        if self.kwargs.get('keys') != []:
             self.getDict = self.getDictPredefinedKeys
         else:
             self.getDict = self.getDictGeneratedKeys
@@ -112,12 +112,12 @@ class DictGenerator(InputModule):
                 event = self.generateEvent(payload)
                 self.submit(event, self.pool.queue.outbox)
                 self.key_number = +1
-                sleep(self.kwargs.interval)
+                sleep(self.kwargs.get('interval'))
 
     def getDictPredefinedKeys(self):
 
         d = {}
-        for key in self.kwargs.keys:
+        for key in self.kwargs.get('keys'):
             d[key] = self.pickWord()
 
         return d
@@ -125,7 +125,7 @@ class DictGenerator(InputModule):
     def getDictGeneratedKeys(self):
 
         d = {}
-        for x in range(0, randint(self.kwargs.min_elements, self.kwargs.max_elements)):
+        for x in range(0, randint(self.kwargs.get('min_elements'), self.kwargs.get('max_elements'))):
             d[self.generateKey()] = self.generateValue()
         return d
 
@@ -136,12 +136,12 @@ class DictGenerator(InputModule):
             word = choice(self.wordlist).rstrip()
             try:
                 return word
-            except:
+            except Exception:
                 pass
 
     def generateValueInteger(self):
         '''Returns a random number.'''
-        return randint(self.kwargs.num_values_min, self.kwargs.num_values_max)
+        return randint(self.kwargs.get('num_values_min'), self.kwargs.get('num_values_max'))
 
     def generateKeyNumber(self):
         '''Generates a key by incrementing integer.'''

@@ -25,6 +25,7 @@
 from wishbone.module import InputModule
 from wishbone.protocol.decode.dummy import Dummy
 from gevent import sleep
+from wishbone.event import Event
 
 
 class TestEvent(InputModule):
@@ -64,9 +65,10 @@ class TestEvent(InputModule):
     def produce(self):
 
         while self.loop():
-            for payload in self.decode(self.kwargs.payload):
-                event = self.generateEvent(payload)
-                event.set(payload, self.kwargs.destination)
+            event = Event()
+            self.kwargs.render(event_content=event.dump(complete=True))
+            for payload in self.decode(self.kwargs.get("payload")):
+                event.set(payload, self.kwargs.get("destination"))
                 self.submit(event, self.pool.queue.outbox)
-                sleep(self.kwargs.interval)
+                sleep(self.kwargs.get("interval"))
         self.logging.info("Stopped producing events.")

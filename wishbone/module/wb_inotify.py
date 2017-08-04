@@ -111,16 +111,15 @@ class WBInotify(InputModule):
 
     def preHook(self):
 
-        for path, event_types in self.kwargs.paths.items():
+        for path, event_types in self.kwargs.get('paths').items():
             for event_type in event_types:
                 if event_type not in constants.__dict__:
                     raise Exception("Inotify event type '%s' defined for path '%s' is not valid." % (event_type, path))
 
-        for path, inotify_types in self.kwargs.paths.items():
-            self.sendToBackground(self.monitor, path, inotify_types, self.kwargs.glob_pattern)
+        for path, inotify_types in self.kwargs.get('paths').items():
+            self.sendToBackground(self.monitor, path, inotify_types, self.kwargs.get('glob_pattern'))
 
     def monitor(self, path, inotify_types, glob_pattern):
-
         '''Monitors ``path`` for ``inotify_types`` on files and dirs matching ``glob_pattern``
 
         :param str path: The path to monitor
@@ -137,7 +136,7 @@ class WBInotify(InputModule):
             if os.path.exists(path) and os.access(path, os.R_OK):
                 self.logging.info("Started to monitor path '%s' for '%s' inotify events on paths matching '%s'." % (os.path.abspath(path), all_types, glob_pattern))
 
-                if self.kwargs.initial_listing:
+                if self.kwargs.get('initial_listing'):
                     for p in self.__getAllFiles(path, glob_pattern):
                         for payload in self.decode(p):
                             e = self.generateEvent({"path": os.path.abspath(payload), "inotify_type": "WISHBONE_INIT"})

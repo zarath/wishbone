@@ -26,7 +26,7 @@ from wishbone.queue import QueuePool
 from wishbone.logging import Logging
 from wishbone.event import Event as Wishbone_Event
 from wishbone.event import Bulk
-from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule, TTLExpired
+from wishbone.error import QueueConnected, ModuleInitFailure, InvalidModule, TTLExpired, InvalidData
 from wishbone.moduletype import ModuleType
 from wishbone.actorconfig import ActorConfig
 
@@ -39,10 +39,100 @@ from time import time
 from sys import exc_info
 import traceback
 import inspect
-from easydict import EasyDict
 import jinja2
 
+
 Greenlets = namedtuple('Greenlets', "consumer generic log metric")
+
+
+class RenderKwargs(object):
+
+    '''
+    This object keeps the rendered kwargs using event content from
+    different queues.
+    '''
+
+    def __init__(self, data, functions={}):
+
+        self.env_template = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        self.env_template.globals.update(functions)
+
+        self.__original_kwargs = data
+        self.__template_kwargs = self.__initialize_templates(data, functions)
+        self.__rendered_kwargs = {}
+        self.render(None, {})
+        self.functions = functions
+
+    def get(self, key, queue_context=None):
+        '''
+        Returns the rendered kwarg value within the given queue_context.
+        '''
+
+        if queue_context not in self.__rendered_kwargs:
+            raise InvalidData("No kwargs have been rendered yet for queue '%s'." % (queue_context))
+        else:
+            result = self.__lookup(key, self.__rendered_kwargs[queue_context])
+            if result is None:
+                return ''
+            else:
+                return result
+
+    def render(self, queue_context=None, event_content={}):
+
+        def recurse(data):
+
+            if isinstance(data, jinja2.environment.Template):
+                try:
+                    return data.render(**event_content)
+                except Exception as err:
+                    return "Shite"
+            elif isinstance(data, dict):
+                for key, value in data.items():
+                    data[key] = recurse(value)
+                return data
+            elif isinstance(data, list):
+                for index, value in enumerate(data):
+                    data[index] = recurse(value)
+                return data
+            elif data is None:
+                return ''
+            else:
+                return data
+
+        self.__rendered_kwargs[queue_context] = recurse(self.__template_kwargs.copy())
+
+    def __initialize_templates(self, kwargs, functions):
+
+        def recurse(data):
+
+            if isinstance(data, str):
+                try:
+                    return self.env_template.from_string(data)
+                except Exception:
+                    return data
+            elif isinstance(data, dict):
+                for key, value in data.items():
+                    data[key] = recurse(value)
+                return data
+            elif isinstance(data, list):
+                for index, value in enumerate(data):
+                    data[index] = recurse(value)
+                return data
+            else:
+                return data
+
+        return recurse(kwargs)
+
+    def __lookup(self, key, dataset):
+
+        def recurse(skey, data):
+            value = data[skey[0]]
+            if len(skey) == 1:
+                return value
+            else:
+                return recurse(skey[1:], value)
+
+        return recurse(key.split('.'), dataset)
 
 
 class Actor(object):
@@ -79,11 +169,7 @@ class Actor(object):
 
         self.stopped = True
 
-        self.raw_kwargs = {}
-        self.template_kwargs = {}
-        self.kwargs = EasyDict({})
-
-        self.__setupKwargs()
+        self.kwargs = self.__setupKwargs()
 
     def connect(self, source, destination_module, destination_queue):
         '''Connects the <source> queue to the <destination> queue.
@@ -150,23 +236,6 @@ class Actor(object):
     def preHook(self):
 
         self.logging.debug("Initialized.")
-
-    def renderKwargs(self, event=None):
-
-        if event is None:
-            for name, template in self.template_kwargs.items():
-                try:
-                    self.kwargs[name] = template.render(event.dump(complete=True))
-                except Exception as err:
-                    self.kwargs[name] = self.raw_kwargs[name]
-                    self.logging.debug("Problem rendering template. Reason: %s" % (err))
-        else:
-            for name, template in self.template_kwargs.items():
-                try:
-                    self.kwargs[name] = template.render(event.dump(complete=True))
-                except Exception as err:
-                    self.kwargs[name] = self.raw_kwargs[name]
-                    self.logging.debug("Problem rendering template. Reason: %s" % (err))
 
     def registerConsumer(self, function, queue):
         '''Registers <function> to process all events in <queue>
@@ -288,7 +357,7 @@ class Actor(object):
             self.logging.setCurrentEventID(event.get("uuid"))
 
             # Render kwargs using the current event values
-            self.renderKwargs(event)
+            self.kwargs.render(queue, event.dump())
 
             # Apply all the defined queue functions to the event
             event = self.__applyFunctions(queue, event)
@@ -384,18 +453,11 @@ class Actor(object):
         Initial rendering of all templates to self.kwargs
         '''
 
-        for key, template in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
-            if key == "self" or isinstance(template, ActorConfig):
+        kwargs = {}
+        for key, value in list(inspect.getouterframes(inspect.currentframe())[2][0].f_locals.items()):
+            if key == "self" or isinstance(value, ActorConfig):
                 next
             else:
-                if isinstance(template, str):
-                    self.raw_kwargs[key] = template
-                    self.template_kwargs[key] = jinja2.Template(template)
-                    for name, function in self.config.lookups.items():
-                        self.template_kwargs[key].globals[name] = function
-                    try:
-                        self.kwargs[key] = self.template_kwargs[key].render(data={})
-                    except Exception:
-                        self.kwargs[key] = self.raw_kwargs[key]
-                else:
-                    self.kwargs[key] = template
+                kwargs[key] = value
+
+        return RenderKwargs(kwargs, self.config.lookups)

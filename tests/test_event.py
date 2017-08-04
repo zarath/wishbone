@@ -23,12 +23,13 @@
 #
 
 from wishbone.event import Event
+from jinja2 import Template
 
 def test_event_format():
 
     e = Event({"one": 1, "two": 2})
 
-    assert e.format("{one} is a number and so is {two}") == "1 is a number and so is 2"
+    assert e.format(Template("{{one}} is a number and so is {{two}}")) == "1 is a number and so is 2"
 
 def test_event_uuid():
 
