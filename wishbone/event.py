@@ -25,7 +25,6 @@
 import arrow
 import time
 from wishbone.error import BulkFull, InvalidData, InvalidEventFormat, TTLExpired
-from gevent.event import Event as Gevent_Event
 from uuid import uuid4
 from jinja2 import Template
 from jinja2 import Undefined
@@ -69,7 +68,7 @@ class Bulk(object):
         '''
 
         e = Bulk()
-        e.__events = self.deepish_copy(self.__events)
+        e.__events = self.deepishCopy(self.__events)
         return e
 
     def dump(self):
@@ -116,7 +115,7 @@ class Bulk(object):
 
         return len(self.__events)
 
-    def deepish_copy(self, org):
+    def deepishCopy(self, org):
         '''
         much, much faster than deepcopy, for a dict of the simple python types.
 
@@ -176,7 +175,7 @@ class Event(object):
         Returns a cloned version of the event using deepcopy.
         '''
 
-        c = self.deepish_copy(self.data)
+        c = self.deepishCopy(self.data)
         e = Event()
         e.data = c
         return e
@@ -189,7 +188,7 @@ class Event(object):
         :param str destination: The name of the destination key.
         '''
 
-        self.set(self.deepish_copy(self.get(source)), destination)
+        self.set(self.deepishCopy(self.get(source)), destination)
 
     def decrementTTL(self):
 
@@ -198,7 +197,7 @@ class Event(object):
         else:
             self.data["ttl"] -= 1
 
-    def deepish_copy(self, org):
+    def deepishCopy(self, org):
         '''
         much, much faster than deepcopy, for a dict of the simple python types.
 
@@ -242,9 +241,9 @@ class Event(object):
             else:
                 del(self.data[key])
 
-    def dict_merge(self, dct, merge_dct):
+    def dictMerge(self, dct, merge_dct):
         """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-        updating only top-level keys, dict_merge recurses down into dicts nested
+        updating only top-level keys, dictMerge recurses down into dicts nested
         to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
         ``dct``.
 
@@ -256,7 +255,7 @@ class Event(object):
         """
         for k, v in list(merge_dct.items()):
             if k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], dict):
-                self.dict_merge(dct[k], merge_dct[k])
+                self.dictMerge(dct[k], merge_dct[k])
             else:
                 dct[k] = merge_dct[k]
 
@@ -352,7 +351,7 @@ class Event(object):
         for name in reversed(key.split('.')):
             result = {name: result}
 
-        self.dict_merge(self.data, result)
+        self.dictMerge(self.data, result)
         # self.data.update(result)
 
     def slurp(self, data):
