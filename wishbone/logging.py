@@ -58,6 +58,17 @@ class Logging():
     definition.
     '''
 
+    LEVELS = {
+        0: "emergency",
+        1: "alert",
+        2: "critical",
+        3: "error",
+        4: "warning",
+        5: "notice",
+        6: "informational",
+        7: "debug"
+    }
+
     def __init__(self, name, q, identification=None):
         self.name = name
         self.logs = q
@@ -72,6 +83,7 @@ class Logging():
             "identification": self.identification,
             "event_id": self.__event_id,
             "level": level,
+            "txt_level": self.LEVELS[level],
             "pid": getpid(),
             "module": self.name,
             "message": message

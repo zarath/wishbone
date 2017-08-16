@@ -50,7 +50,7 @@ SCHEMA = {
                 },
             },
         },
-        "functions": {
+        "module_functions": {
             "type": "object",
             "patternProperties": {
                 ".*": {
@@ -68,20 +68,20 @@ SCHEMA = {
                 }
             }
         },
-        "lookups": {
+        "template_functions": {
             "type": "object",
             "patternProperties": {
                 ".*": {
                     "type": "object",
                     "properties": {
-                        "lookup": {
+                        "function": {
                             "type": "string"
                         },
                         "arguments": {
                             "type": "object"
                         }
                     },
-                    "required": ["lookup"],
+                    "required": ["function"],
                     "additionalProperties": False
                 }
             }
@@ -121,6 +121,26 @@ SCHEMA = {
     "additionalProperties": False
 }
 
+LOG_TEMPLATE = '''
+    {%- if data.level == 0 -%}
+        \x1B[0;35m
+    {%- elif data.level == 1 -%}
+        \x1B[1;35m
+    {%- elif data.level == 2 -%}
+        \x1B[0;31m
+    {%- elif data.level == 3 -%}
+        \x1B[1;31m
+    {%- elif data.level == 4 -%}
+        \x1B[1;33m
+    {%- elif data.level == 5 -%}
+        \x1B[1;30m
+    {%- elif data.level == 6 -%}
+        \x1B[1;37m
+    {%- else -%}
+        \x1B[1;37m
+    {%- endif -%}
+    {{strftime(data.time, "YYYY-MM-DD HH:mm:ss ZZ")}} {{data.identification}}[{{data.pid}}] {{data.txt_level}} {{data.module}}: {{data.message}}\x1B[0m'''
+
 
 class ConfigFile(object):
 
@@ -141,9 +161,9 @@ class ConfigFile(object):
         self.logstyle = logstyle
         self.loglevel = loglevel
         self.config = EasyDict({
-            "lookups": EasyDict({}),
+            "template_functions": EasyDict({}),
             "modules": EasyDict({}),
-            "functions": EasyDict({}),
+            "module_functions": EasyDict({}),
             "protocols": EasyDict({}),
             "routingtable": []
         })
@@ -177,19 +197,19 @@ class ConfigFile(object):
         else:
             raise Exception("Module instance name '%s' is already taken." % (name))
 
-    def addLookup(self, name, lookup, arguments={}):
+    def addTemplateFunction(self, name, function, arguments={}):
 
-        if name not in self.config["lookups"]:
-            self.config["lookups"][name] = EasyDict({
-                "lookup": lookup,
+        if name not in self.config["template_functions"]:
+            self.config["template_functions"][name] = EasyDict({
+                "function": function,
                 "arguments": arguments
             })
         else:
             raise Exception("Lookup instance name '%s' is already taken." % (name))
 
-    def addFunction(self, name, function, arguments={}):
+    def addModuleFunction(self, name, function, arguments={}):
 
-        self.config["functions"][name] = EasyDict({"function": function, "arguments": arguments})
+        self.config["module_functions"][name] = EasyDict({"function": function, "arguments": arguments})
 
     def addProtocol(self, name, protocol, arguments={}, event=False):
 
@@ -213,7 +233,7 @@ class ConfigFile(object):
 
     def dump(self):
 
-        return EasyDict(self.config, recursive=True)
+        return EasyDict(self.config)
 
     def load(self, filename):
 
@@ -221,13 +241,13 @@ class ConfigFile(object):
         self.__validate(config)
         self.__validateRoutingTable(config)
 
-        if "lookups" in config:
-            for lookup in config["lookups"]:
-                self.addLookup(name=lookup, **config["lookups"][lookup])
+        if "template_functions" in config:
+            for function in config["template_functions"]:
+                self.addTemplateFunction(name=function, **config["template_functions"][function])
 
-        if "functions" in config:
-            for function in config["functions"]:
-                self.addFunction(name=function, **config["functions"][function])
+        if "module_functions" in config:
+            for function in config["module_functions"]:
+                self.addModuleFunction(name=function, **config["module_functions"][function])
 
         if "protocols" in config:
             for protocol in config["protocols"]:
@@ -310,12 +330,17 @@ class ConfigFile(object):
 
     def _setupLoggingSTDOUT(self):
 
+        self.addTemplateFunction("strftime", "wishbone.function.template.strftime")
+
         if not self.__queueConnected("_logs", "outbox"):
+
             self.config["modules"]["_logs_format"] = EasyDict({
                 "description": "Create a human readable log format.",
-                "module": "wishbone.module.process.humanlogformat",
+                "module": "wishbone.module.process.template",
                 "arguments": {
-                    "colorize": self.colorize_stdout
+                    "templates": {
+                        "human_log": LOG_TEMPLATE
+                    }
                 },
                 "functions": {
                 }
@@ -326,7 +351,8 @@ class ConfigFile(object):
                 'description': "Prints all incoming logs to STDOUT.",
                 'module': "wishbone.module.output.stdout",
                 "arguments": {
-                    "colorize": self.colorize_stdout
+                    "colorize": self.colorize_stdout,
+                    "selection": "human_log"
                 },
                 "functions": {
                 }

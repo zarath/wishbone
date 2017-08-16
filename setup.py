@@ -70,6 +70,7 @@ class PyTest(TestCommand):
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
 
+
 setup(
     name=PROJECT,
     version=VERSION,
@@ -131,7 +132,7 @@ setup(
         ],
         'wishbone.module.process': [
             'modify = wishbone.module.modify:Modify',
-            'humanlogformat = wishbone.module.humanlogformat:HumanLogFormat'
+            'template = wishbone.module.template:Template',
         ],
         'wishbone.module.input': [
             'cron =  wishbone.module.cron:Cron',
@@ -144,25 +145,21 @@ setup(
             'stdout = wishbone.module.stdout:STDOUT',
             'syslog = wishbone.module.wbsyslog:Syslog'
         ],
-        'wishbone.function.modify': [
-            'set = wishbone.function.modify_set:modifySetWrapper',
-            'append = wishbone.function.modify_append:modifyAppendWrapper',
-            'uppercase = wishbone.function.modify_uppercase:modifyUppercaseWrapper',
-            'lowercase = wishbone.function.modify_lowercase:modifyLowercaseWrapper',
-
+        'wishbone.function.module': [
+            'set = wishbone.function.module.modify_set:modifySetWrapper',
+            'append = wishbone.function.module.modify_append:modifyAppendWrapper',
+            'uppercase = wishbone.function.module.modify_uppercase:modifyUppercaseWrapper',
+            'lowercase = wishbone.function.module.modify_lowercase:modifyLowercaseWrapper',
         ],
-        'wishbone.lookup.internal': [
-            'choice = wishbone.lookup.choice:Choice',
-            'cycle = wishbone.lookup.cycle:Cycle',
-            'event = wishbone.lookup.event:EventLookup',
-            'pid = wishbone.lookup.pid:PID',
-            'random_bool = wishbone.lookup.random_bool:RandomBool',
-            'random_integer = wishbone.lookup.random_integer:RandomInteger',
-            'random_word = wishbone.lookup.random_word:RandomWord',
-            'random_uuid = wishbone.lookup.random_uuid:RandomUUID'
-        ],
-        'wishbone.lookup.external': [
-            'etcd = wishbone.lookup.etcd:ETCD',
+        'wishbone.function.template': [
+            'choice = wishbone.function.template.choice:Choice',
+            'cycle = wishbone.function.template.cycle:Cycle',
+            'pid = wishbone.function.template.pid:PID',
+            'random_bool = wishbone.function.template.random_bool:RandomBool',
+            'random_integer = wishbone.function.template.random_integer:RandomInteger',
+            'random_uuid = wishbone.function.template.random_uuid:RandomUUID',
+            'random_word = wishbone.function.template.random_word:RandomWord',
+            'strftime = wishbone.function.template.strftime:STRFTime'
         ]
     }
 )
