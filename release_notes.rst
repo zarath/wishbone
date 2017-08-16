@@ -4,24 +4,22 @@ Wishbone changelog
 Version 3.0.0
 ~~~~~~~~~~~~~
 Features:
-- Reorganized module, function and lookup components and name space.
+- Reorganized modules into protocol, function and module name space.
 - Added wishbone.input.inotify to generate file activity events.
 - Added wishbone.utils.StructuredDataFile, a convenience class to load and
   read structured data files.
 - Added --nocolorize switch to debug command.
 - Added nocolor support to wishbone.output.stdout
-- Added nocolor support to wishbone.encode.humanlogformat
 - Added support for module functions.
-- Removed wishbone.encode and decode modules and replace by equivalent functions.
+- Removed wishbone.encode and decode modules categories. replace by protocols.
 - Reworked wishbone.module.input.testevent
-- Reworked encode/decode handling.
-- Added support for Event.format
-- Added support for jinja2 templating for user provided variables
-- Wishbone logs are now simple dicts
+- Reworked encode/decode handling (protocol modules).
+- Added support for jinja2 templating for user provided variables.
 - Removed confusing context property from module instances.
 - Removed Metric() and Log() type and replaced by simple dicts
 - Removed getting metrics from builtin webserver
-
+- Replaced wishbone.module.process.humanlogformat with template module
+- Removed @-prefix from default event fields
 
 Bugfixes:
 
