@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  event.py
+#  pid.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,13 +22,14 @@
 #
 #
 
-from wishbone.lookup import Lookup
+from wishbone.function.template import TemplateFunction
+from os import getpid
 
 
-class EventLookup(Lookup):
+class PID(TemplateFunction):
 
     '''
-    **Returns the requested event header value.**
+    **Returns the PID of the current process.**
 
     - Parameters to initialize the function:
 
@@ -36,17 +37,12 @@ class EventLookup(Lookup):
 
     - Parameters to call the function:
 
-        When calling the function a variable reference can be used similar to:
-
-        ~~headerlookup("modulename.header.variablename","unknown")
-
-        Keep in mind you always have to use a dynamic lookup function (double
-        tilde).  You can provide a default value in case <variablename> does not
-        exist in the header of namespace <modulename>.
+        None
     '''
 
     def __init__(self):
-        pass
+        self.pid = getpid()
 
     def lookup(self):
-        pass
+
+        return self.pid

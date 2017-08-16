@@ -41,6 +41,8 @@ import traceback
 import inspect
 import jinja2
 
+from easydict import EasyDict
+
 
 Greenlets = namedtuple('Greenlets', "consumer generic log metric")
 
@@ -54,9 +56,11 @@ class RenderKwargs(object):
 
     def __init__(self, data, functions={}):
 
-        self.env_template = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        self.env_template = jinja2.Environment(
+            undefined=jinja2.StrictUndefined,
+            trim_blocks=True,
+        )
         self.env_template.globals.update(functions)
-
         self.__original_kwargs = data
         self.__template_kwargs = self.__initialize_templates(data, functions)
         self.__rendered_kwargs = {}
@@ -85,11 +89,12 @@ class RenderKwargs(object):
                 try:
                     return data.render(**event_content)
                 except Exception as err:
-                    return "Shite"
+                    return "## invalid template: %s" % (err)
             elif isinstance(data, dict):
+                result = {}
                 for key, value in data.items():
-                    data[key] = recurse(value)
-                return data
+                    result[key] = recurse(value)
+                return result
             elif isinstance(data, list):
                 for index, value in enumerate(data):
                     data[index] = recurse(value)
@@ -99,17 +104,20 @@ class RenderKwargs(object):
             else:
                 return data
 
-        self.__rendered_kwargs[queue_context] = recurse(self.__template_kwargs.copy())
+        rendered_kwargs = EasyDict(
+            recurse(
+                self.__template_kwargs.copy()
+            )
+        )
+        self.__rendered_kwargs[queue_context] = rendered_kwargs
+        return rendered_kwargs
 
     def __initialize_templates(self, kwargs, functions):
 
         def recurse(data):
 
             if isinstance(data, str):
-                try:
-                    return self.env_template.from_string(data)
-                except Exception:
-                    return data
+                return self.env_template.from_string(data)
             elif isinstance(data, dict):
                 for key, value in data.items():
                     data[key] = recurse(value)
@@ -117,11 +125,12 @@ class RenderKwargs(object):
             elif isinstance(data, list):
                 for index, value in enumerate(data):
                     data[index] = recurse(value)
-                return data
+                return EasyDict(data)
             else:
                 return data
 
-        return recurse(kwargs)
+        result = recurse(kwargs)
+        return result
 
     def __lookup(self, key, dataset):
 
@@ -165,11 +174,10 @@ class Actor(object):
         self.__children = {}
         self.__parents = {}
 
-        self.__lookups = {}
-
         self.stopped = True
 
-        self.kwargs = self.__setupKwargs()
+        self.__renderKwargs = self.__setupRenderKwargs()
+        self.renderKwargs()
 
     def connect(self, source, destination_module, destination_queue):
         '''Connects the <source> queue to the <destination> queue.
@@ -245,6 +253,10 @@ class Actor(object):
         success queue.'''
 
         self.greenlets.consumer.append(spawn(self.__consumer, function, queue))
+
+    def renderKwargs(self):
+
+        self.kwargs = self.__renderKwargs.render()
 
     def start(self):
         '''Starts the module.'''
@@ -325,8 +337,8 @@ class Actor(object):
 
     def __applyFunctions(self, queue, event):
 
-        if queue in self.config.functions:
-            for f in self.config.functions[queue]:
+        if queue in self.config.module_functions:
+            for f in self.config.module_functions[queue]:
                 try:
                     event = f(event)
                 except Exception as err:
@@ -346,6 +358,12 @@ class Actor(object):
 
             event = self.pool.getQueue(queue).get()
 
+            # Render kwargs relative to the event's content and make these accessible under event.kwargs
+            event.kwargs = self.__renderKwargs.render(
+                queue_context=queue,
+                event_content=event.dump(complete=True)
+            )
+
             # Validate TTL
             try:
                 event.decrementTTL()
@@ -355,9 +373,6 @@ class Actor(object):
 
             # Set the current event uuid to the logger object
             self.logging.setCurrentEventID(event.get("uuid"))
-
-            # Render kwargs using the current event values
-            self.kwargs.render(queue, event.dump())
 
             # Apply all the defined queue functions to the event
             event = self.__applyFunctions(queue, event)
@@ -414,7 +429,7 @@ class Actor(object):
 
         queues_w_registered_consumers = [t.args[1] for t in self.greenlets.consumer]
 
-        for queue in self.config.functions.keys():
+        for queue in self.config.module_functions.keys():
             if queue not in queues_w_registered_consumers:
                 raise ModuleInitFailure("Failed to initialize module '%s'. You have functions defined on queue '%s' which doesn't have a registered consumer." % (self.name, queue))
 
@@ -447,7 +462,7 @@ class Actor(object):
                 self.logging.debug("This 'Output' type module has no encoder method set. Setting the configured one.")
                 self.encode = self.config.protocol_function
 
-    def __setupKwargs(self):
+    def __setupRenderKwargs(self):
 
         '''
         Initial rendering of all templates to self.kwargs
@@ -460,4 +475,4 @@ class Actor(object):
             else:
                 kwargs[key] = value
 
-        return RenderKwargs(kwargs, self.config.lookups)
+        return RenderKwargs(kwargs, self.config.template_functions)

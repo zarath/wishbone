@@ -22,13 +22,13 @@
 #
 #
 
-from wishbone.lookup import Lookup
+from wishbone.function.template import TemplateFunction
 import os
 from random import choice
 import io
 
 
-class RandomWord(Lookup):
+class RandomWord(TemplateFunction):
 
     '''
     **Returns a random word.**

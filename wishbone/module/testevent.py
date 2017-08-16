@@ -65,10 +65,10 @@ class TestEvent(InputModule):
     def produce(self):
 
         while self.loop():
-            event = Event()
-            self.kwargs.render(event_content=event.dump(complete=True))
-            for payload in self.decode(self.kwargs.get("payload")):
-                event.set(payload, self.kwargs.get("destination"))
+            self.renderKwargs()
+            for payload in self.decode(self.kwargs.payload):
+                event = Event()
+                event.set(payload, self.kwargs.destination)
                 self.submit(event, self.pool.queue.outbox)
-                sleep(self.kwargs.get("interval"))
+                sleep(self.kwargs.interval)
         self.logging.info("Stopped producing events.")

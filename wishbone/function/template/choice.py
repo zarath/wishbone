@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  cycle.py
+#  choice.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,32 +22,32 @@
 #
 #
 
-from wishbone.lookup import Lookup
-from itertools import cycle as cycle_array
+from wishbone.function.template import TemplateFunction
+from random import choice as choice_array
 
 
-class Cycle(Lookup):
+class Choice(TemplateFunction):
 
     '''
-    **Cycles through the provided array returning the next element.**
+    **Returns a random element from the provided array.**
 
-    This function rotates through the elements in the provided array always
-    returning the next element.  The order is fixed and when the end is
-    reached the first element is returned again.
+    This function returns a random element from the provided array.
 
     - Parameters to initialize the function:
 
-        - values(list)(None): An array of elements to cycle through/
+        - values(list)(None): An array of elements to choose from
 
     - Parameters to call the function:
 
         None
+
+
     '''
 
-    def __init__(self, values):
+    def __init__(self, array):
 
-        self.c = cycle_array(values)
+        self.array = array
 
     def lookup(self):
 
-        return next(self.c)
+        return choice_array(self.array)

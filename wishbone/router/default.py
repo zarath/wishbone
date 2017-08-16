@@ -27,7 +27,6 @@ from wishbone.error import ModuleInitFailure, NoSuchModule, ProtocolInitFailure
 from wishbone.componentmanager import ComponentManager
 from gevent import event, sleep, spawn
 from gevent import pywsgi
-import json
 from .graphcontent import GRAPHCONTENT
 from .graphcontent import VisJSData
 
@@ -187,14 +186,14 @@ class Default(object):
             except Exception as err:
                 raise ProtocolInitFailure("Could not initialize Protocol module '%s'. Reason: %s" % (name, err))
 
-        lookups = {}
-        for name, instance in list(self.config.lookups.items()):
-            lookups[name] = self.component_manager.getComponentByName(instance.lookup)(**instance.arguments).lookup
+        template_functions = {}
+        for name, instance in list(self.config.template_functions.items()):
+            template_functions[name] = self.component_manager.getComponentByName(instance.function)(**instance.arguments).lookup
 
-        functions = {}
-        for name, instance in list(self.config.functions.items()):
+        module_functions = {}
+        for name, instance in list(self.config.module_functions.items()):
             self.component_manager.getComponentByName(instance.function)
-            functions[name] = self.component_manager.getComponentByName(instance.function)(**instance.arguments)
+            module_functions[name] = self.component_manager.getComponentByName(instance.function)(**instance.arguments)
 
         for name, instance in list(self.config.modules.items()):
             # Cherrypick the defined functions
@@ -202,8 +201,8 @@ class Default(object):
             for queue, queue_functions in list(instance.functions.items()):
                 module_functions[queue] = []
                 for queue_function in queue_functions:
-                    if queue_function in functions:
-                        module_functions[queue].append(functions[queue_function])
+                    if queue_function in module_functions:
+                        module_functions[queue].append(module_functions[queue_function])
 
             pmodule = self.component_manager.getComponentByName(instance.module)
 
@@ -218,9 +217,9 @@ class Default(object):
                 name=name,
                 size=self.size,
                 frequency=self.frequency,
-                lookups=lookups,
+                template_functions=template_functions,
                 description=instance.description,
-                functions=module_functions,
+                module_functions=module_functions,
                 identification=self.identification,
                 protocol_name=protocol_name,
                 protocol_function=protocol_function,

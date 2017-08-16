@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  pid.py
+#  random_integer.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,27 +22,30 @@
 #
 #
 
-from wishbone.lookup import Lookup
-from os import getpid
+from wishbone.function.template import TemplateFunction
+from random import randint
 
 
-class PID(Lookup):
+class RandomInteger(TemplateFunction):
+    '''**Returns a random integer.**
 
-    '''
-    **Returns the PID of the current process.**
+    Returns a random integer between <min> and <max>.
 
     - Parameters to initialize the function:
 
-        None
+        - minimum(int)(0): The minimum value
+        - maximum(int)(0): The maximum value
 
     - Parameters to call the function:
 
         None
     '''
 
-    def __init__(self):
-        self.pid = getpid()
+    def __init__(self, minimum=0, maximum=0):
+
+        self.minimum = minimum
+        self.maximum = maximum
 
     def lookup(self):
 
-        return self.pid
+        return randint(self.minimum, self.maximum)

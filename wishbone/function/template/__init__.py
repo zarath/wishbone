@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  randombool.py
+#  __init__.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,24 +22,7 @@
 #
 #
 
-from wishbone.lookup import Lookup
-from random import getrandbits
 
+class TemplateFunction(object):
 
-class RandomBool(Lookup):
-
-    '''
-    **Randomly returns True or False**
-
-    - Parameters to initialize the function:
-
-        None
-
-    - Parameters to call the function:
-
-        None
-    '''
-
-    def lookup(self):
-
-        return bool(getrandbits(1))
+    pass

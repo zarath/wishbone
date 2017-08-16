@@ -35,16 +35,16 @@ class ActorConfig(object):
         name (str): The name identifying the actor instance.
         size (int): The size of the Actor instance's queues.
         frequency (int): The time in seconds to generate metrics.
-        lookups (dict): A dictionary of lookup methods.
+        template_functions (dict): A dictionary of template functions.
         description (str): A short free form discription of the actor instance.
-        functions (dict): A dict of queue names containing an array of functions
+        module_functions (dict): A dict of queue names containing an array of module_functions
         protocol_name (str): A protocol decode or encode component name.
         protocol_function (func): The protocol function to apply
         protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
         disable_exception_handling (bool): If True, exception handling is disabled. Usefull for testing
     '''
 
-    def __init__(self, name, size=100, frequency=1, lookups={}, description="A Wishbone actor.", functions={},
+    def __init__(self, name, size=100, frequency=1, template_functions={}, description="A Wishbone actor.", module_functions={},
                  protocol_name=None, protocol_function=None, protocol_event=False,
                  identification="wishbone",
                  disable_exception_handling=False):
@@ -54,9 +54,9 @@ class ActorConfig(object):
             name (str): The name identifying the actor instance.
             size (int): The size of the Actor instance's queues.
             frequency (int): The time in seconds to generate metrics.
-            lookups (dict): A dictionary of lookup methods.
+            template_functions (dict): A dictionary of template functions.
             description (str): A short free form discription of the actor instance.
-            functions (dict): A dict of queue names containing an array of functions.
+            module_functions (dict): A dict of queue names containing an array of module_functions.
             protocol_name (str): A protocol decode or encode component name.
             protocol_function (func): The protocol function to apply
             protocol_event (bool): If true the incoming data is expected to be a Wishbone event.
@@ -66,9 +66,9 @@ class ActorConfig(object):
         self.name = name
         self.size = size
         self.frequency = frequency
-        self.lookups = lookups
+        self.template_functions = template_functions
         self.description = description
-        self.functions = functions
+        self.module_functions = module_functions
         self.protocol_name = protocol_name
         self.protocol_function = protocol_function
         self.protocol_event = protocol_event

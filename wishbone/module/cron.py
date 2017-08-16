@@ -46,9 +46,9 @@ class Cron(InputModule):
             | The cron expression.
 
         - payload(str)("wishbone")
-            | The content of <field>.
+            | The content of <destination>.
 
-        - field(str)("data")
+        - destination(str)("data")
             | The location to write <payload> to.
 
 
@@ -58,11 +58,11 @@ class Cron(InputModule):
            |  Outgoing messges
     '''
 
-    def __init__(self, actor_config, cron="*/10 * * * *", payload="wishbone", field="data"):
+    def __init__(self, actor_config, cron="*/10 * * * *", payload="wishbone", destination="data"):
 
         Actor.__init__(self, actor_config)
         self.pool.createQueue("outbox")
-        self.cron = CronExpression("%s wishbone" % self.kwargs.get("cron"))
+        self.cron = CronExpression("%s wishbone" % self.kwargs.cron)
         self.decode = Dummy().handler
 
     def preHook(self):
@@ -72,9 +72,9 @@ class Cron(InputModule):
         while self.loop():
             if self.cron.check_trigger(time.localtime(time.time())[:5]):
                 self.logging.info("Cron executed.")
-                for payload in self.decode(self.kwargs.get('payload')):
-                    e = Event(payload)
-                    self.kwargs.render(event_content=e.dump(complete=True))
-                    e.set(payload, self.kwargs.get('field'))
-                    self.submit(e, self.pool.queue.outbox)
+                self.renderKwargs()
+                event = Event()
+                for payload in self.decode(self.kwargs.payload):
+                    event.set(payload, self.kwargs.destination)
+                    self.submit(event, self.pool.queue.outbox)
             sleep(60)

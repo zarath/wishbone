@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  etcd.py
+#  cycle.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,37 +22,32 @@
 #
 #
 
-from wishbone.lookup import Lookup
-import requests
+from wishbone.function.template import TemplateFunction
+from itertools import cycle as cycle_array
 
 
-class ETCD(Lookup):
+class Cycle(TemplateFunction):
 
     '''
-    **Returns a value from etcd.**
+    **Cycles through the provided array returning the next element.**
 
-    Returns a value from an etcd instance.
+    This function rotates through the elements in the provided array always
+    returning the next element.  The order is fixed and when the end is
+    reached the first element is returned again.
 
     - Parameters to initialize the function:
 
-        - base(str)("/v2/keys"): The base part of the endpoint.
+        - values(list)(None): An array of elements to cycle through/
 
     - Parameters to call the function:
 
-        - key(str)(): The name of the key to request.
+        None
     '''
 
-    def __init__(self, base="/v2/keys"):
+    def __init__(self, values):
 
-        self.base = base.rstrip('/')
+        self.c = cycle_array(values)
 
-    def lookup(self, key):
+    def lookup(self):
 
-        key = key.lstrip('/')
-
-        try:
-            response = requests.get('%s/%s' % (self.base, key))
-            response.raise_for_status()
-            return response.json()["node"]["value"]
-        except Exception as err:
-            raise NoSuchValue(str(err))
+        return next(self.c)

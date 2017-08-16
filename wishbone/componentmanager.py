@@ -26,7 +26,6 @@ import pkg_resources
 import re
 from prettytable import PrettyTable
 from wishbone.error import InvalidComponent, NoSuchComponent
-from wishbone.lookup import Lookup
 from wishbone.actor import Actor
 
 
@@ -58,36 +57,31 @@ class ComponentManager():
         There exist 3 component types:
             - module
             - function
-            - lookup
 
     Args:
 
         namespace (list): The list of namespaces to search for <categories>
         module_categories (list): The list of module categories to search
         function_categories (list): The list of function categories to search
-        lookup_categories (list): The list of lookup categories to search
     '''
 
     COMPONENT_TYPES = [
         "protocol",
         "module",
         "function",
-        "lookup"
     ]
 
     def __init__(self,
                  namespace=["wishbone", "wishbone_contrib"],
                  protocol_categories=["encode", "decode"],
                  module_categories=["flow", "input", "output", "process"],
-                 function_categories=["modify", "process"],
-                 lookup_categories=["internal", "external"]
+                 function_categories=["template", "module"],
                  ):
         self.namespace = namespace
-        self.component_types = ["protocol", "module", "function", "lookup"]
+        self.component_types = ["protocol", "module", "function"]
         self.protocol_categories = protocol_categories
         self.module_categories = module_categories
         self.function_categories = function_categories
-        self.lookup_categories = lookup_categories
 
     def exists(self, name):
 
@@ -117,7 +111,7 @@ class ComponentManager():
             name (str): The component name.
 
         Returns:
-            class: A ``wishbone.Actor```, ``wishbone.Lookup`` or ``wishbone.Function`` based class
+            class: A ``wishbone.Actor```, ``wishbone.Function`` based class
 
         Raises:
             NoSuchComponent: The module does not exist.
@@ -133,7 +127,7 @@ class ComponentManager():
         if m is None:
             raise NoSuchComponent("Component %s.%s.%s.%s cannot be found." % (namespace, component_type, category, name))
         else:
-            if callable(m) or issubclass(m, Actor) or issubclass(m, Lookup):
+            if callable(m) or issubclass(m, Actor):
                 return m
             else:
                 raise InvalidComponent("'%s.%s.%s.%s' is not a valid wishbone component." % (namespace, component_type, category, name))
@@ -146,7 +140,7 @@ class ComponentManager():
             name (str): The complete module name.
 
         Returns:
-            class: A `wishbone.Actor` or `wishbone.Lookup` or `wishbone.Function` based class
+            class: A `wishbone.Actor` or `wishbone.Function` based class
 
         Raises:
             NoSuchComponent: The module does not exist.
@@ -174,10 +168,6 @@ class ComponentManager():
                 prefix = "%s.function.%s" % (namespace, category)
                 for item in [m.name for m in pkg_resources.iter_entry_points(group=prefix)]:
                     yield (namespace, "function", category, item)
-            for category in sorted(self.lookup_categories):
-                prefix = "%s.lookup.%s" % (namespace, category)
-                for item in [m.name for m in pkg_resources.iter_entry_points(group=prefix)]:
-                    yield (namespace, "lookup", category, item)
             for category in sorted(self.module_categories):
                 prefix = "%s.module.%s" % (namespace, category)
                 for item in [m.name for m in pkg_resources.iter_entry_points(group=prefix)]:

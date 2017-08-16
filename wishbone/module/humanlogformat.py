@@ -108,7 +108,7 @@ class HumanLogFormat(ProcessModule):
 
         if all([True if item in data.keys() else False for item in ["time", "pid", "level", "module", "message"]]):
             log = ("%s %s %s %s: %s" % (
-                strftime("%Y-%m-%dT%H:%M:%S", localtime(data["time"])),
+                strftime("YYYY-MM-DD HH:mm:ss ZZ", localtime(data["time"])),
                 "%s[%s]:" % (self.ident, data["pid"]),
                 self.levels[data["level"]],
                 data["module"],

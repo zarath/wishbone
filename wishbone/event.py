@@ -28,6 +28,7 @@ from wishbone.error import BulkFull, InvalidData, InvalidEventFormat, TTLExpired
 from uuid import uuid4
 from jinja2 import Template
 from jinja2 import Undefined
+from easydict import EasyDict
 
 
 class SilentUndefined(Undefined):
@@ -165,6 +166,8 @@ class Event(object):
 
         if uuid:
             self.data["uuid"] = str(uuid4())
+
+        self.kwargs = EasyDict({})
 
     def __dummy(self):
 

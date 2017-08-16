@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  random_integer.py
+#  random_uuid.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,30 +22,26 @@
 #
 #
 
-from wishbone.lookup import Lookup
-from random import randint
+from wishbone.function.template import TemplateFunction
+from uuid import uuid4
 
 
-class RandomInteger(Lookup):
-    '''**Returns a random integer.**
+class RandomUUID(TemplateFunction):
 
-    Returns a random integer between <min> and <max>.
+    '''
+    **Returns a uuid value.**
+
+    This function returns a uuid value.
 
     - Parameters to initialize the function:
 
-        - minimum(int)(0): The minimum value
-        - maximum(int)(0): The maximum value
+        None
 
     - Parameters to call the function:
 
         None
     '''
 
-    def __init__(self, minimum=0, maximum=0):
-
-        self.minimum = minimum
-        self.maximum = maximum
-
     def lookup(self):
 
-        return randint(self.minimum, self.maximum)
+        return str(uuid4())
