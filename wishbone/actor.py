@@ -117,7 +117,14 @@ class RenderKwargs(object):
         def recurse(data):
 
             if isinstance(data, str):
-                return self.env_template.from_string(data)
+                try:
+                    if len(list(self.env_template.parse(data).find_all(jinja2.nodes.Name))) > 0:
+                        return self.env_template.from_string(data)
+                    else:
+                        return data
+                except Exception as err:
+                    return data
+
             elif isinstance(data, dict):
                 for key, value in data.items():
                     data[key] = recurse(value)
