@@ -136,7 +136,6 @@ setup(
         ],
         'wishbone.module.input': [
             'cron =  wishbone.module.cron:Cron',
-            'dictgenerator = wishbone.module.dictgenerator:DictGenerator',
             'inotify = wishbone.module.wb_inotify:WBInotify',
             'testevent = wishbone.module.testevent:TestEvent',
         ],
