@@ -139,7 +139,7 @@ LOG_TEMPLATE = '''
     {%- else -%}
         \x1B[1;37m
     {%- endif -%}
-    {{strftime(data.time, "YYYY-MM-DD HH:mm:ss ZZ")}} {{data.identification}}[{{data.pid}}] {{data.txt_level}} {{data.module}}: {{data.message}}\x1B[0m'''
+    {{strftime(epoch(), "YYYY-MM-DDTHH:mm:ss.SSSSZZ")}} {{data.identification}}[{{data.pid}}] {{data.txt_level}} {{data.module}}: {{data.message}}\x1B[0m'''
 
 
 class ConfigFile(object):
@@ -331,6 +331,7 @@ class ConfigFile(object):
     def _setupLoggingSTDOUT(self):
 
         self.addTemplateFunction("strftime", "wishbone.function.template.strftime")
+        self.addTemplateFunction("epoch", "wishbone.function.template.epoch")
 
         if not self.__queueConnected("_logs", "outbox"):
 
