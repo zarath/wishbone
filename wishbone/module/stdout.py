@@ -114,16 +114,16 @@ class STDOUT(OutputModule):
 
         self.__validateInput(foreground_color, background_color, color_style)
         self.format = Format(
-            self.kwargs.get("selection"),
-            self.kwargs.get("counter"),
-            self.kwargs.get("pid")
+            self.kwargs.selection,
+            self.kwargs.counter,
+            self.kwargs.pid
         )
         self.pool.createQueue("inbox")
         self.registerConsumer(self.consume, "inbox")
 
     def preHook(self):
 
-        if self.kwargs.get("colorize"):
+        if self.kwargs.colorize:
             init(autoreset=True)
             self.getString = self.__stringColor
         else:
@@ -133,21 +133,21 @@ class STDOUT(OutputModule):
 
         if isinstance(event, Bulk):
             data = event.dumpFieldAsList(
-                self.kwargs.get("selection", "inbox")
+                event.kwargs.selection
             )
             data = "\n".join(data)
         else:
             data = event.get(
-                self.kwargs.get("selection", "inbox")
+                event.kwargs.selection
             )
 
         data = self.encode(data)
 
         output = self.getString(
-            getattr(Fore, self.kwargs.get("foreground_color", "inbox")),
-            getattr(Back, self.kwargs.get("background_color", "inbox")),
-            getattr(Style, self.kwargs.get("color_style", "inbox")),
-            self.kwargs.get("prefix", "inbox"),
+            getattr(Fore, event.kwargs.foreground_color),
+            getattr(Back, event.kwargs.background_color),
+            getattr(Style, event.kwargs.color_style),
+            event.kwargs.prefix,
             self.format.do(data)
         )
         sys.stdout.write(output)
