@@ -94,7 +94,7 @@ class Switch(FlowModule):
         if self.destination in self.forbidden:
             raise ReservedName("Cannot forward incoming events to queue '%s'." % (self.destination))
         else:
-            self.submit(event, self.pool.getQueue(self.destination))
+            self.submit(event, self.destination)
 
     def switch(self, event):
 

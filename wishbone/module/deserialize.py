@@ -68,7 +68,7 @@ class Deserialize(FlowModule):
 
         if isinstance(event, Bulk):
             for e in event.dump():
-                self.submit(e, self.pool.queue.outbox)
+                self.submit(e, "outbox")
             self.logging.debug("Expanded Bulk event into %s events." % (event.size()))
         else:
             data = event.get(self.kwargs.source)
@@ -79,6 +79,6 @@ class Deserialize(FlowModule):
                     e.set(True, "tmp.%s.generated_by" % (self.name))
                     e.set("", self.kwargs.destination)
                     e.set(item, self.kwargs.destination)
-                    self.submit(e, self.pool.queue.outbox)
+                    self.submit(e, "outbox")
             else:
                 raise Exception("%s does not appear to contain an array." % (self.kwargs.source))

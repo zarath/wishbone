@@ -241,7 +241,7 @@ class Actor(object):
                         "unit": "",
                         "tags": ()
                     })
-                    self.submit(event, self.pool.queue.metrics)
+                    self.submit(event, "metrics")
             sleep(self.frequency)
 
     def postHook(self):
@@ -333,11 +333,22 @@ class Actor(object):
         self.stopped = True
 
     def submit(self, event, queue):
-        '''A convenience function which submits <event> to <queue>.'''
+
+        '''
+        Submits <event> to the queue with name <queue>.
+
+
+        Args:
+            event (wishbone.event.Event): An event instance.
+            queue (str): The name of the queue
+
+        Returns:
+            None
+        '''
 
         while self.loop():
             try:
-                queue.put(event)
+                getattr(self.pool.queue, queue).put(event)
                 break
             except QueueFull:
                 sleep(0.1)
@@ -399,9 +410,9 @@ class Actor(object):
                     event.error = info
 
                 self.logging.error("%s" % (err))
-                self.submit(event, self.pool.queue.failed)
+                self.submit(event, "failed")
             else:
-                self.submit(event, self.pool.queue.success)
+                self.submit(event, "success")
             finally:
                 # Unset the current event uuid to the logger object
                 self.logging.setCurrentEventID(None)

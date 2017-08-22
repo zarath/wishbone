@@ -84,7 +84,7 @@ class Fresh(FlowModule):
 
     def consume(self, event):
 
-        self.submit(event, self.pool.queue.outbox)
+        self.submit(event, "outbox")
         self._resetTimeout()
 
     def countDown(self):
@@ -99,12 +99,12 @@ class Fresh(FlowModule):
                 while self.loop() and not self._incoming:
                     e = Event()
                     e.set(self.kwargs.timeout_payload)
-                    self.submit(e, self.pool.queue.timeout)
+                    self.submit(e, "timeout")
                     self._sleeper(self.kwargs.repeat_interval)
                 self.logging.info("Incoming data resumed. Sending recovery event.")
                 e = Event()
                 e.set(self.kwargs.recovery_payload)
-                self.submit(e, self.pool.queue.timeout)
+                self.submit(e, "timeout")
 
     def _resetTimeout(self):
 

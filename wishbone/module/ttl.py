@@ -65,10 +65,15 @@ class TTL(FlowModule):
     def consume(self, event):
 
         if self.validateTTL(event):
-            self.submit(event, self.pool.queue.outbox)
+            self.submit(event, "outbox")
         else:
-            self.logging.warning("Event TTL of %s exceeded in transit (%s) moving event to ttl_exceeded queue." % (event.getHeaderValue(self.name, "ttl_counter"), self.kwargs.ttl))
-            self.submit(event, self.pool.queue.ttl_exceeded)
+            self.logging.warning(
+                "Event TTL of %s exceeded in transit (%s) moving event to ttl_exceeded queue." % (
+                    event.get("tmp.%s.ttl_counter" % (self.name)),
+                    self.kwargs.ttl
+                )
+            )
+            self.submit(event, "ttl_exceeded")
 
     def validateTTL(self, event):
 

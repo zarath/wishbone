@@ -126,10 +126,10 @@ class Acknowledge(FlowModule):
             event.set(ack_id, "tmp.%s.ack_id" % (self.name))
 
             if self.ack_table.unack(ack_id):
-                self.submit(event, self.pool.queue.outbox)
+                self.submit(event, "outbox")
             else:
                 self.logging.debug("Event with still unacknowledged <ack_id> '%s' send to <dropped> queue." % (ack_id))
-                self.submit(event, self.pool.queue.dropped)
+                self.submit(event, "dropped")
 
 
     def acknowledge(self, event):

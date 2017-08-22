@@ -75,7 +75,7 @@ class Template(ProcessModule):
 
         for key, result in event.kwargs.templates.items():
             event.set(result, key)
-        self.submit(event, self.pool.queue.outbox)
+        self.submit(event, "outbox")
 
     # def construct(self, event):
 

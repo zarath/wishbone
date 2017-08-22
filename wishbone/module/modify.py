@@ -210,7 +210,7 @@ class Modify(ProcessModule):
             except Exception as err:
                 self.logging.error("Failed to process expression '%s'. Reason: %s Skipped." % (expression, err))
 
-        self.submit(event, self.pool.queue.outbox)
+        self.submit(event, "outbox")
 
     def command_add_item(self, event, item, key):
 

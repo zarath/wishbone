@@ -55,4 +55,4 @@ class Funnel(FlowModule):
 
     def consume(self, event):
 
-        self.submit(event, self.pool.queue.outbox)
+        self.submit(event, "outbox")

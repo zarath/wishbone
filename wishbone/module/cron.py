@@ -76,5 +76,5 @@ class Cron(InputModule):
                 event = Event()
                 for payload in self.decode(self.kwargs.payload):
                     event.set(payload, self.kwargs.destination)
-                    self.submit(event, self.pool.queue.outbox)
+                    self.submit(event, "outbox")
             sleep(60)
