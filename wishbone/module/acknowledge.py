@@ -115,7 +115,7 @@ class Acknowledge(FlowModule):
 
     def consume(self, event):
 
-        if self.kwargs.ack_id == None:
+        if self.kwargs.ack_id is None:
             ack_id = self.generateID()
         else:
             ack_id = event.format(self.kwargs.ack_id, '.')
@@ -130,7 +130,6 @@ class Acknowledge(FlowModule):
             else:
                 self.logging.debug("Event with still unacknowledged <ack_id> '%s' send to <dropped> queue." % (ack_id))
                 self.submit(event, "dropped")
-
 
     def acknowledge(self, event):
 
@@ -147,7 +146,6 @@ class Acknowledge(FlowModule):
     def generateID(self):
 
         return ''.join(SystemRandom().choice(string.ascii_lowercase) for _ in range(4))
-
 
     def postHook(self):
 

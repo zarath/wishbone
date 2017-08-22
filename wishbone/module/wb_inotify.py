@@ -139,13 +139,13 @@ class WBInotify(InputModule):
                 if self.kwargs.initial_listing:
                     for p in self.__getAllFiles(path, glob_pattern):
                         for payload in self.decode(p):
-                            e = self.generateEvent({"path": os.path.abspath(payload), "inotify_type": "WISHBONE_INIT"})
-                            self.submit(e, "outbox")
+                            event = self.generateEvent({"path": os.path.abspath(payload), "inotify_type": "WISHBONE_INIT"})
+                            self.submit(event, "outbox")
                 try:
                     for abs_path, i_type in self.__setupInotifyMonitor(path, inotify_types, glob_pattern):
                         for payload in self.decode(abs_path):
                             event = self.generateEvent({"path": payload, "inotify_type": i_type})
-                            self.submit(e, "outbox")
+                            self.submit(event, "outbox")
                 except Exception as err:
                     self.logging.critical('Failed to initialize inotify monitor. This needs immediate attention. Reason: %s' % err)
                     sleep(1)

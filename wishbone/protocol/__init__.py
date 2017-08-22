@@ -23,7 +23,7 @@
 #
 
 from wishbone.error import ProtocolError
-from wishbone.event import Event
+
 
 class Decode(object):
 

@@ -146,4 +146,3 @@ class Logging():
         """
         self.__log(4, message, *args, **kwargs)
     warn = warning
-
